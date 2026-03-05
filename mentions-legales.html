@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mentions légales — AdminGo</title>
+    <meta name="description" content="Mentions légales du site AdminGo, application de révision pour l'examen AIS." />
+    <meta name="robots" content="noindex" />
+
+    <!-- Custom Styles (shared variables & font) -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+
+    <!-- Self-contained page styles (no Tailwind dependency) -->
+    <style>
+        .legal-wrapper {
+            max-width: 48rem;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .legal-wrapper {
+                padding: 3rem 1.5rem;
+            }
+        }
+
+        /* Back link button */
+        .legal-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.1s;
+            background: rgb(var(--color-surface));
+            color: rgb(var(--color-primary));
+            border: 1px solid rgb(var(--color-border));
+        }
+
+        .legal-back:hover {
+            background: rgba(var(--color-primary), 0.08);
+        }
+
+        .legal-back:active {
+            transform: translateY(1px);
+        }
+
+        /* Page title */
+        .legal-title {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            color: rgb(var(--color-text));
+        }
+
+        @media (min-width: 640px) {
+            .legal-title {
+                font-size: 1.875rem;
+            }
+        }
+
+        .legal-subtitle {
+            font-size: 0.875rem;
+            margin-bottom: 2rem;
+            color: rgb(var(--color-text-secondary));
+            line-height: 1.6;
+        }
+
+        @media (min-width: 640px) {
+            .legal-subtitle {
+                margin-bottom: 2.5rem;
+            }
+        }
+
+        /* Section cards */
+        .legal-section {
+            margin-bottom: 1.5rem;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            background: rgb(var(--color-surface));
+            border: 1px solid rgb(var(--color-border));
+        }
+
+        @media (min-width: 640px) {
+            .legal-section {
+                margin-bottom: 2.5rem;
+                padding: 1.5rem;
+                border-radius: 1.25rem;
+            }
+        }
+
+        .legal-section h2 {
+            font-size: 1rem;
+            font-weight: 900;
+            margin-bottom: 0.75rem;
+            color: rgb(var(--color-text));
+        }
+
+        @media (min-width: 640px) {
+            .legal-section h2 {
+                font-size: 1.125rem;
+                margin-bottom: 1rem;
+            }
+        }
+
+        .legal-section h3 {
+            font-weight: 700;
+            margin-top: 1rem;
+            color: rgb(var(--color-text));
+            font-size: 0.875rem;
+        }
+
+        .legal-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .legal-section ul li {
+            padding: 0.25rem 0;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: rgb(var(--color-text-secondary));
+        }
+
+        .legal-section ul li strong {
+            color: rgb(var(--color-text));
+        }
+
+        .legal-section .legal-text {
+            font-size: 0.875rem;
+            line-height: 1.7;
+            color: rgb(var(--color-text-secondary));
+        }
+
+        .legal-section .legal-text p {
+            margin-bottom: 0.75rem;
+        }
+
+        .legal-section .legal-text p:last-child {
+            margin-bottom: 0;
+        }
+
+        .legal-section .legal-text strong {
+            color: rgb(var(--color-text));
+        }
+
+        .legal-section a {
+            color: rgb(var(--color-primary));
+            text-decoration: underline;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .legal-section code {
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            background: rgb(var(--color-border));
+        }
+
+        .legal-section .legal-list-disc {
+            list-style: disc;
+            padding-left: 1.25rem;
+        }
+
+        /* Bottom CTA button */
+        .legal-cta {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .legal-cta {
+                margin-top: 2rem;
+            }
+        }
+
+        .legal-cta a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            transition: transform 0.1s;
+            background: rgb(var(--color-primary));
+            color: #fff;
+            box-shadow: 0 4px 0 rgb(var(--color-primary-dark));
+        }
+
+        .legal-cta a:active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+        /* Footer */
+        .legal-footer {
+            text-align: center;
+            padding: 2rem 0;
+            font-size: 0.75rem;
+            color: rgb(var(--color-text-secondary));
+        }
+
+        .legal-footer a {
+            color: rgb(var(--color-primary));
+            text-decoration: underline;
+        }
+
+        .legal-footer .legal-date {
+            margin-top: 0.25rem;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+
+<body style="background: rgb(var(--color-bg)); color: rgb(var(--color-text)); min-height: 100vh;">
+
+    <div class="legal-wrapper">
+
+        <!-- Back link -->
+        <a href="index.html" class="legal-back">← Retour aux flashcards</a>
+
+        <h1 class="legal-title">📜 Mentions légales</h1>
+        <p class="legal-subtitle">
+            Conformément aux dispositions des articles 6-III et 19 de la loi n° 2004-575 du 21 juin 2004 pour la
+            confiance dans l'économie numérique (LCEN), ainsi qu'au Règlement Général sur la Protection des Données
+            (RGPD — Règlement UE 2016/679).
+        </p>
+
+        <!-- 1. Éditeur du site -->
+        <section class="legal-section">
+            <h2>1. Éditeur du site</h2>
+            <ul>
+                <li><strong>Raison sociale :</strong> Association TutoTech (loi 1901)</li>
+                <li><strong>Siège social :</strong> 6, Rue Parmentier, 95870 Bezons, France</li>
+                <li><strong>Numéro RNA :</strong> W951007376</li>
+                <li><strong>Directeur de la publication :</strong> Nicolas BODAINE</li>
+                <li><strong>Contact :</strong> contact@tutotech.org</li>
+                <li><strong>Site web :</strong> <a href="https://tutotech.org" target="_blank"
+                        rel="noopener noreferrer">https://tutotech.org</a></li>
+            </ul>
+        </section>
+
+        <!-- 2. Hébergement -->
+        <section class="legal-section">
+            <h2>2. Hébergement</h2>
+            <ul>
+                <li><strong>Hébergeur :</strong> Microsoft Ireland Operations Ltd</li>
+                <li><strong>Adresse :</strong> 1, One Microsoft Place, South County Business Park, Leopardstown,
+                    Dublin 18, Irlande</li>
+                <li><strong>Téléphone :</strong> +353 1 295 3826</li>
+                <li><strong>Site web :</strong> <a href="https://azure.microsoft.com/fr-fr/" target="_blank"
+                        rel="noopener noreferrer">https://azure.microsoft.com/fr-fr/</a></li>
+            </ul>
+        </section>
+
+        <!-- 3. Propriété intellectuelle -->
+        <section class="legal-section">
+            <h2>3. Propriété intellectuelle</h2>
+            <div class="legal-text">
+                <p>
+                    L'ensemble du contenu de ce site (textes, questions, réponses, explications, structure, design, code
+                    source) est protégé par le droit d'auteur et les lois relatives à la propriété intellectuelle.
+                </p>
+                <p>
+                    Le code source de l'application est distribué sous <strong>licence MIT</strong>. Toute reproduction
+                    ou redistribution doit respecter les termes de cette licence.
+                </p>
+                <p>
+                    Les contenus pédagogiques (questions, réponses, explications) sont la propriété de leurs auteurs
+                    respectifs et ne peuvent être reproduits sans autorisation préalable.
+                </p>
+            </div>
+        </section>
+
+        <!-- 4. Protection des données personnelles (RGPD) -->
+        <section class="legal-section">
+            <h2>4. Protection des données personnelles (RGPD)</h2>
+            <div class="legal-text">
+                <p>
+                    Conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi « Informatique et
+                    Libertés » du 6 janvier 1978 modifiée :
+                </p>
+                <h3>4.1 Données collectées</h3>
+                <p>
+                    Ce site <strong>ne collecte aucune donnée personnelle</strong>. Aucun formulaire d'inscription,
+                    aucun cookie de suivi, aucun outil d'analyse (analytics) n'est utilisé.
+                </p>
+                <p>
+                    Les seules données stockées sont vos préférences d'affichage (mode sombre) via le
+                    <code>localStorage</code> de votre navigateur. Ces données restent exclusivement sur votre appareil
+                    et ne sont jamais transmises à un serveur.
+                </p>
+
+                <h3>4.2 Responsable du traitement</h3>
+                <p>
+                    En l'absence de collecte de données personnelles, aucun responsable de traitement n'est désigné au
+                    sens de l'article 4 du RGPD.
+                </p>
+
+                <h3>4.3 Vos droits</h3>
+                <p>
+                    Conformément aux articles 15 à 22 du RGPD, vous disposez d'un droit d'accès, de rectification,
+                    d'effacement, de limitation, de portabilité et d'opposition concernant vos données. Pour exercer ces
+                    droits, contactez-nous à l'adresse indiquée dans la section « Éditeur du site ».
+                </p>
+            </div>
+        </section>
+
+        <!-- 5. Cookies -->
+        <section class="legal-section">
+            <h2>5. Cookies</h2>
+            <div class="legal-text">
+                <p>
+                    Ce site <strong>n'utilise aucun cookie</strong>, ni cookie technique, ni cookie publicitaire, ni
+                    cookie de mesure d'audience. Aucun bandeau de consentement n'est donc nécessaire conformément aux
+                    recommandations de la CNIL.
+                </p>
+            </div>
+        </section>
+
+        <!-- 6. Ressources externes -->
+        <section class="legal-section">
+            <h2>6. Ressources externes</h2>
+            <div class="legal-text">
+                <p>Ce site charge des ressources depuis des services tiers (CDN) :</p>
+                <ul class="legal-list-disc">
+                    <li><strong>Tailwind CSS</strong> — Framework CSS (cdn.tailwindcss.com)</li>
+                    <li><strong>PapaParse</strong> — Bibliothèque de parsing CSV (cdnjs.cloudflare.com)</li>
+                    <li><strong>Google Fonts</strong> — Police Nunito (fonts.googleapis.com)</li>
+                </ul>
+                <p>
+                    Ces services peuvent collecter des données de connexion (adresse IP, user-agent) conformément à
+                    leurs propres politiques de confidentialité.
+                </p>
+            </div>
+        </section>
+
+        <!-- 7. Limitation de responsabilité -->
+        <section class="legal-section">
+            <h2>7. Limitation de responsabilité</h2>
+            <div class="legal-text">
+                <p>
+                    Les informations présentes sur ce site sont fournies à titre pédagogique et indicatif. L'association
+                    TutoTech s'efforce de fournir des informations exactes et à jour, mais ne saurait être tenue
+                    responsable des erreurs, omissions ou résultats obtenus suite à l'utilisation de ces informations.
+                </p>
+                <p>
+                    Ce site de révision ne se substitue en aucun cas à une formation officielle préparant au titre
+                    professionnel d'Administrateur d'Infrastructures Sécurisées.
+                </p>
+            </div>
+        </section>
+
+        <!-- 8. Crédits -->
+        <section class="legal-section">
+            <h2>8. Crédits</h2>
+            <div class="legal-text">
+                <p><strong>Conception et développement :</strong> Nicolas BODAINE</p>
+                <p><strong>Contenu pédagogique :</strong> Nicolas BODAINE</p>
+                <p><strong>Licence :</strong> Code source sous licence MIT</p>
+            </div>
+        </section>
+
+        <!-- Back link bottom -->
+        <div class="legal-cta">
+            <a href="index.html">← Retour aux flashcards</a>
+        </div>
+
+        <footer class="legal-footer">
+            <p>AdminGo — Proposé par <a href="https://tutotech.org" target="_blank"
+                    rel="noopener noreferrer">TutoTech</a></p>
+            <p class="legal-date">Dernière mise à jour : mars 2026</p>
+        </footer>
+
+    </div>
+
+</body>
+
+</html>
