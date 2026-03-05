@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdminGo — Révisions examen AIS</title>
+  <meta name="description"
+    content="AdminGo : application gratuite de révision par flashcards pour l'examen AIS - Administrateur d'Infrastructures Sécurisées. 500+ questions couvrant tous les domaines de la formation AIS." />
+
+  <!-- Open Graph / Social sharing -->
+  <meta property="og:title" content="AdminGo — Révisions examen AIS" />
+  <meta property="og:description"
+    content="500+ flashcards interactives pour réviser l'examen AIS. Proposé gratuitement par l'association TutoTech." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#58CC02" />
+
+  <!-- Favicon (emoji fallback) -->
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    };
+  </script>
+
+  <!-- PapaParse CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body class="min-h-screen transition-colors duration-300">
+
+  <!-- Interactive particle network background -->
+  <canvas id="particle-canvas" aria-hidden="true"></canvas>
+
+  <!-- Skip to content link (accessibility) -->
+  <a href="#card-scene"
+    class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-white focus:text-black focus:px-4 focus:py-2 focus:rounded-lg focus:font-bold">
+    Aller au contenu principal
+  </a>
+
+  <!-- Fallback for disabled JavaScript -->
+  <noscript>
+    <div style="text-align:center;padding:3rem;font-family:sans-serif;">
+      <h1>🎓 AIS Flashcards</h1>
+      <p>Cette application nécessite JavaScript pour fonctionner. Veuillez l'activer dans votre navigateur.</p>
+    </div>
+  </noscript>
+
+  <!-- ==========================================
+       LOADING SCREEN
+       ========================================== -->
+  <div id="loading-screen" class="fixed inset-0 flex items-center justify-center z-50" role="status"
+    aria-label="Chargement en cours" style="background: rgb(var(--color-bg));">
+    <div class="text-center">
+      <div class="mb-6 animate-bounce" aria-hidden="true">
+        <img src="logo.png" alt="" class="w-16 h-16 mx-auto"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+        <span class="text-6xl" style="display:none;">🎓</span>
+      </div>
+      <p class="text-lg font-bold" style="color: rgb(var(--color-text));">Chargement des flashcards…</p>
+      <div class="mt-4 w-48 h-3 rounded-full mx-auto overflow-hidden" style="background: rgb(var(--color-surface));"
+        role="progressbar" aria-label="Chargement">
+        <div class="h-full rounded-full animate-pulse" style="background: rgb(var(--color-primary)); width: 60%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MAIN APP (hidden until loaded)
+       ========================================== -->
+  <div id="app-container" class="hidden">
+
+    <!-- ---- HEADER ---- -->
+    <header class="glass-header sticky top-0 z-40 border-b-2 px-4 py-3" style="border-color: rgb(var(--color-border));">
+      <div class="max-w-6xl mx-auto flex flex-wrap items-center gap-x-4 gap-y-2">
+
+        <!-- Logo -->
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="w-10 h-10 flex items-center justify-center shrink-0">
+            <img src="logo.png" alt="AdminGo" class="w-10 h-10 rounded-lg object-contain"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+            <span class="text-3xl" style="display:none;">🎓</span>
+          </div>
+          <div>
+            <h1 class="text-lg font-black leading-tight gradient-title">AdminGo</h1>
+            <p class="text-xs font-semibold" style="color: rgb(var(--color-text-secondary));">Révisions examen AIS</p>
+          </div>
+        </div>
+
+        <!-- Spacer to push right items on mobile -->
+        <div class="flex-1 lg:hidden"></div>
+
+        <!-- Score (mobile: top row, next to toggle) -->
+        <div id="score-header" class="score-display shrink-0 lg:order-4" style="display:none;">
+          <span class="score-knew">✅ <span id="score-knew-count">0</span></span>
+          <span class="score-didnt">❌ <span id="score-didnt-count">0</span></span>
+        </div>
+
+        <!-- Theme toggle -->
+        <button id="theme-toggle" class="theme-toggle shrink-0 lg:order-5" aria-label="Basculer le thème">
+          🌙
+        </button>
+
+        <!-- Progress bar (mobile: full width second row) -->
+        <div class="flex items-center gap-3 w-full lg:w-auto lg:flex-1 lg:order-2">
+          <div class="flex-1">
+            <div class="progress-container" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+              aria-label="Progression dans les cartes" id="progress-container">
+              <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="text-right shrink-0 lg:order-3">
+            <span id="progress-text" class="text-sm font-bold" style="color: rgb(var(--color-primary));"
+              aria-live="polite">0%</span>
+            <p id="card-counter" class="text-xs font-semibold" style="color: rgb(var(--color-text-secondary));"
+              aria-live="polite">0 / 0</p>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- ---- CONTENT ---- -->
+    <main class="max-w-6xl mx-auto px-4 py-8">
+      <div class="flex flex-col lg:flex-row gap-8">
+
+        <!-- ================================
+             LEFT: FILTERS SIDEBAR
+             ================================ -->
+        <aside class="lg:w-72 shrink-0">
+
+          <!-- Mobile toggle -->
+          <button id="btn-toggle-filters" class="btn-duo btn-ghost w-full mb-4 lg:hidden text-sm">
+            📋 Filtres par Domaine
+          </button>
+
+          <div id="filter-sidebar" class="filter-panel hidden lg:block">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="font-black text-sm uppercase tracking-wider" style="color: rgb(var(--color-text));">
+                📋 Domaines
+              </h2>
+              <button id="btn-shuffle" class="text-xl cursor-pointer hover:scale-110 transition-transform"
+                title="Mélanger les cartes" aria-label="Mélanger les cartes">
+                🔀
+              </button>
+            </div>
+
+            <div class="flex gap-2 mb-4">
+              <button id="btn-select-all"
+                class="text-xs font-bold py-1.5 px-3 rounded-lg cursor-pointer transition-colors"
+                style="background: rgba(var(--color-primary), 0.12); color: rgb(var(--color-primary));">
+                ✅ Tout
+              </button>
+              <button id="btn-deselect-all"
+                class="text-xs font-bold py-1.5 px-3 rounded-lg cursor-pointer transition-colors"
+                style="background: rgba(var(--color-danger), 0.1); color: rgb(var(--color-danger));">
+                ❌ Rien
+              </button>
+            </div>
+
+            <div id="filter-container" class="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Keyboard hints -->
+          <div class="hidden lg:block mt-4 p-4 rounded-2xl text-xs"
+            style="background: rgb(var(--color-surface)); color: rgb(var(--color-text-secondary)); border: 1px solid rgb(var(--color-border));">
+            <p class="font-bold mb-2">⌨️ Raccourcis</p>
+            <p><kbd class="px-1.5 py-0.5 rounded font-mono text-[10px]"
+                style="background: rgb(var(--color-border));">Espace</kbd> Retourner</p>
+            <p><kbd class="px-1.5 py-0.5 rounded font-mono text-[10px]"
+                style="background: rgb(var(--color-border));">Entrée</kbd> Suivante</p>
+          </div>
+        </aside>
+
+        <!-- ================================
+             CENTER: FLASHCARD
+             ================================ -->
+        <section class="flex-1 flex flex-col items-center">
+
+          <!-- Card Scene -->
+          <div class="card-scene mb-8" id="card-scene" role="region" aria-label="Flashcard de révision">
+            <div class="card-flipper" id="card-flipper" tabindex="0" role="button"
+              aria-label="Retourner la carte (Espace ou clic)">
+
+              <!-- FRONT -->
+              <div class="card-face card-front" aria-hidden="false" id="card-front-face">
+                <span id="domain-badge" class="badge">Domaine</span>
+                <p id="sujet-label" class="sujet-label">Sujet</p>
+                <p id="question-text" class="question-text" aria-live="polite">Question</p>
+                <p class="flip-hint" aria-hidden="true">👆 Clique pour retourner la carte</p>
+              </div>
+
+              <!-- BACK -->
+              <div class="card-face card-back" aria-hidden="true" id="card-back-face">
+                <p class="text-xs uppercase tracking-widest font-bold mb-4"
+                  style="color: rgb(var(--color-text-secondary));" aria-hidden="true">✅ Réponse</p>
+                <p id="reponse-text" class="reponse-text">Réponse</p>
+                <div class="w-16 h-0.5 rounded-full my-4" style="background: rgb(var(--color-border));"
+                  aria-hidden="true"></div>
+                <p class="text-xs uppercase tracking-widest font-bold mb-3"
+                  style="color: rgb(var(--color-text-secondary));" aria-hidden="true">💡 Explication</p>
+                <p id="explication-text" class="explication-text">Explication</p>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Swipe hint (mobile) -->
+          <span id="swipe-hint" class="swipe-hint" aria-hidden="true">👆 Swipe ← → pour naviguer</span>
+
+          <!-- Navigation Buttons -->
+          <nav class="flex items-center gap-4 flex-wrap justify-center" aria-label="Navigation des cartes">
+            <button id="btn-prev" class="btn-duo btn-ghost" aria-label="Carte précédente">
+              ← Précédent
+            </button>
+            <button id="btn-flip" class="btn-duo btn-accent" aria-label="Retourner la carte">
+              🔄 Retourner
+            </button>
+            <button id="btn-next" class="btn-duo btn-primary" aria-label="Carte suivante">
+              Suivant →
+            </button>
+          </nav>
+
+          <!-- Score buttons (visible after flip) -->
+          <div id="score-panel" class="score-panel">
+            <button id="btn-knew" class="btn-score btn-score--knew" aria-label="Je savais">
+              👍 Je savais
+            </button>
+            <button id="btn-didnt" class="btn-score btn-score--didnt" aria-label="Je ne savais pas">
+              👎 Je ne savais pas
+            </button>
+          </div>
+
+          <!-- Project info -->
+          <div class="mt-10 max-w-xl mx-auto p-6 rounded-2xl text-sm leading-relaxed text-center"
+            style="background: rgb(var(--color-surface)); color: rgb(var(--color-text-secondary)); border: 1px solid rgb(var(--color-border));">
+            <p class="font-bold mb-2" style="color: rgb(var(--color-text));">
+              📘 À propos d'AdminGo
+            </p>
+            <p>
+              <strong>AdminGo</strong> est un projet dédié aux révisions de préparation à l'examen d'<a
+                href="https://www.francecompetences.fr/recherche/rncp/37680" target="_blank" rel="noopener noreferrer"
+                class="underline font-semibold" style="color: rgb(var(--color-primary));">Administrateur
+                d'Infrastructures Sécurisées (AIS)</a>. Toutes les questions sont en lien avec les "savoirs"
+              listés dans le <a href="https://www.francecompetences.fr/wp-json/api/v1/activity/export/24214/465506"
+                target="_blank" rel="noopener noreferrer" class="underline font-semibold"
+                style="color: rgb(var(--color-primary));">référentiel</a> du titre professionnel.
+            </p>
+            <p class="mt-3">
+              Ce site est proposé <strong>gratuitement</strong> par l'association <a href="https://tutotech.org"
+                target="_blank" rel="noopener noreferrer" class="underline font-semibold"
+                style="color: rgb(var(--color-primary));">TutoTech</a>.
+            </p>
+            <p class="mt-3">
+              ❤️ Si ce projet vous est utile, un <a href="https://liberapay.com/TutoTech/donate" target="_blank"
+                rel="noopener noreferrer" class="underline font-bold" style="color: rgb(var(--color-accent));">don à
+                l'association</a> serait grandement apprécié afin de pouvoir fournir encore plus de projets similaires.
+            </p>
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+
+    <!-- ---- FOOTER ---- -->
+    <footer class="text-center py-6 text-xs font-semibold" style="color: rgb(var(--color-text-secondary));">
+      <p>AdminGo — Révisions de préparation pour l'examen AIS 🚀 | Proposé par <a href="https://tutotech.org"
+          target="_blank" rel="noopener noreferrer" class="underline"
+          style="color: rgb(var(--color-primary));">TutoTech</a> | <a href="mentions-legales.html" target="_blank"
+          rel="noopener noreferrer" class="underline" style="color: rgb(var(--color-primary));">Mentions légales</a></p>
+      <p class="mt-1 opacity-50">Astuce : essaie le Code Konami (↑↑↓↓←→←→BA) 😉</p>
+    </footer>
+
+  </div>
+
+  <!-- App Script -->
+  <script src="particles.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
