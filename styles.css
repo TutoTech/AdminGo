@@ -237,7 +237,7 @@ body {
   /* Explicit transform required for Firefox backface-visibility support */
   transform: rotateY(0deg);
   z-index: 2;
-  background: linear-gradient(145deg, rgb(var(--color-surface)), rgba(var(--color-primary), 0.05));
+  background: linear-gradient(145deg, rgb(var(--color-surface)), rgb(var(--color-surface)));
   border: 2px solid rgb(var(--color-border));
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
@@ -245,7 +245,7 @@ body {
 .card-back {
   transform: rotateY(180deg);
   z-index: 1;
-  background: linear-gradient(145deg, rgba(var(--color-primary), 0.08), rgba(var(--color-secondary), 0.08));
+  background: rgb(var(--color-surface));
   border: 2px solid rgba(var(--color-primary), 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
