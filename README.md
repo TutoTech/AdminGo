@@ -10,7 +10,7 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-58CC02?style=for-the-badge)
 
 **Application web de révision par flashcards pour l'examen AIS**
-*(Administration et Infrastructure Systèmes)*
+*(Administrateur d'Infrastructures Sécurisées)*
 
 Une SPA statique, moderne et gamifiée, inspirée du design Duolingo.
 
