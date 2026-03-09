@@ -8,6 +8,7 @@ COPY mentions-legales.html /usr/share/nginx/html/
 COPY styles.css /usr/share/nginx/html/
 COPY app.js /usr/share/nginx/html/
 COPY database.csv /usr/share/nginx/html/
+COPY particles.js /usr/share/nginx/html/
 
 # Copy logo if present (optional)
 COPY logo.pn[g] /usr/share/nginx/html/
