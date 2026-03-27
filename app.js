@@ -11,6 +11,7 @@ let activeDomains = new Set();
 let domainColorMap = {}; // domain name -> color index
 let scoreKnew = 0;
 let scoreDidnt = 0;
+let searchTerm = '';
 const konamiSequence = [
     'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
     'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
@@ -100,6 +101,24 @@ function shuffleArray(array) {
 }
 
 // ============================================
+// TEXT NORMALIZATION (accent-insensitive search)
+// ============================================
+function normalizeText(str) {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+// ============================================
+// DEBOUNCE UTILITY
+// ============================================
+function debounce(fn, delay) {
+    let timer;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
+
+// ============================================
 // FILTERS
 // ============================================
 
@@ -159,9 +178,17 @@ function buildFilters(cards) {
  * Filter cards by active domains, shuffle, and reset
  */
 function applyFilters() {
-    filteredCards = shuffleArray(
-        allCards.filter((c) => activeDomains.has(c.domaine))
-    );
+    let cards = allCards.filter((c) => activeDomains.has(c.domaine));
+
+    if (searchTerm) {
+        const normalizedSearch = normalizeText(searchTerm);
+        cards = cards.filter((c) =>
+            normalizeText(c.question).includes(normalizedSearch) ||
+            normalizeText(c.reponse).includes(normalizedSearch)
+        );
+    }
+
+    filteredCards = shuffleArray(cards);
     currentIndex = 0;
     isFlipped = false;
     renderCard();
@@ -623,6 +650,29 @@ async function init() {
     document.getElementById('btn-deselect-all')?.addEventListener('click', deselectAllFilters);
     document.getElementById('btn-shuffle')?.addEventListener('click', reshuffleCards);
     document.getElementById('btn-toggle-filters')?.addEventListener('click', toggleMobileFilters);
+
+    // Search
+    const searchInput = document.getElementById('search-input');
+    const btnClearSearch = document.getElementById('btn-clear-search');
+
+    if (searchInput) {
+        const debouncedSearch = debounce(() => {
+            searchTerm = searchInput.value.trim();
+            btnClearSearch.style.display = searchTerm ? 'block' : 'none';
+            applyFilters();
+        }, 300);
+
+        searchInput.addEventListener('input', debouncedSearch);
+    }
+
+    if (btnClearSearch) {
+        btnClearSearch.addEventListener('click', () => {
+            searchInput.value = '';
+            searchTerm = '';
+            btnClearSearch.style.display = 'none';
+            applyFilters();
+        });
+    }
 
     // Hide loading, show app
     if (loadingScreen) loadingScreen.classList.add('hidden');
