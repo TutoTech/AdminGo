@@ -687,10 +687,28 @@ async function init() {
 // BACKUP EXPORT / IMPORT
 // ============================================
 const BACKUP_KEYS = ['admingo-score-knew', 'admingo-score-didnt', 'ais-dark-mode', 'admingo-pwa-dismissed'];
+const BYTEBIN_URL = 'https://bytebin.lucko.me';
 let activeBackupMode = null; // 'export' | 'import' | null
 
 function getBackupPanel() {
     return document.getElementById('backup-panel');
+}
+
+function restoreFromCode(code) {
+    const json = JSON.parse(atob(code));
+
+    if (isNaN(parseInt(json['admingo-score-knew'])) || isNaN(parseInt(json['admingo-score-didnt']))) {
+        throw new Error('invalid scores');
+    }
+
+    Object.keys(json).forEach((key) => {
+        if (BACKUP_KEYS.includes(key)) {
+            localStorage.setItem(key, json[key]);
+        }
+    });
+
+    loadScore();
+    initDarkMode();
 }
 
 function toggleExportPanel() {
@@ -715,25 +733,48 @@ function toggleExportPanel() {
     const code = btoa(JSON.stringify(data));
 
     panel.innerHTML =
-        '<div class="backup-field">' +
-        '<input type="text" class="backup-input" id="backup-code" value="' + code + '" readonly />' +
-        '<button class="backup-action-btn" id="btn-copy-backup">Copier</button>' +
-        '</div>' +
-        '<div id="backup-msg"></div>';
-
+        '<div id="backup-msg" class="backup-msg">Envoi en cours…</div>';
     panel.style.display = 'block';
     btnExport.classList.add('active');
     btnImport.classList.remove('active');
     activeBackupMode = 'export';
 
-    document.getElementById('btn-copy-backup').addEventListener('click', () => {
-        const input = document.getElementById('backup-code');
-        navigator.clipboard.writeText(input.value).then(() => {
-            const btn = document.getElementById('btn-copy-backup');
-            btn.textContent = 'Copié !';
-            setTimeout(() => { btn.textContent = 'Copier'; }, 2000);
+    // Upload to Bytebin
+    fetch(BYTEBIN_URL + '/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: code,
+    })
+        .then((res) => {
+            if (!res.ok) throw new Error('upload failed');
+            return res.json();
+        })
+        .then((json) => {
+            const shortCode = json.key;
+            panel.innerHTML =
+                '<p class="backup-msg" style="margin-bottom:6px;">Entrez ce code sur l\'autre appareil :</p>' +
+                '<div class="backup-field">' +
+                '<input type="text" class="backup-input" id="backup-code" value="' + shortCode + '" readonly />' +
+                '<button class="backup-action-btn" id="btn-copy-backup">Copier</button>' +
+                '</div>' +
+                '<div id="backup-msg"></div>';
+
+            document.getElementById('btn-copy-backup').addEventListener('click', () => {
+                const input = document.getElementById('backup-code');
+                navigator.clipboard.writeText(input.value).then(() => {
+                    const btn = document.getElementById('btn-copy-backup');
+                    btn.textContent = 'Copié !';
+                    setTimeout(() => { btn.textContent = 'Copier'; }, 2000);
+                });
+            });
+        })
+        .catch(() => {
+            const msgEl = document.getElementById('backup-msg');
+            if (msgEl) {
+                msgEl.className = 'backup-msg backup-msg--error';
+                msgEl.textContent = 'Erreur réseau. Vérifiez votre connexion.';
+            }
         });
-    });
 }
 
 function toggleImportPanel() {
@@ -751,7 +792,7 @@ function toggleImportPanel() {
 
     panel.innerHTML =
         '<div class="backup-field">' +
-        '<input type="text" class="backup-input" id="backup-import-code" placeholder="Collez votre code ici" />' +
+        '<input type="text" class="backup-input" id="backup-import-code" placeholder="Entrez le code" />' +
         '<button class="backup-action-btn" id="btn-validate-import">Valider</button>' +
         '</div>' +
         '<div id="backup-msg"></div>';
@@ -766,34 +807,26 @@ function toggleImportPanel() {
         const msgEl = document.getElementById('backup-msg');
         const code = input.value.trim();
 
-        try {
-            const json = JSON.parse(atob(code));
+        if (!code) return;
 
-            // Validate required keys
-            if (typeof json['admingo-score-knew'] === undefined || typeof json['admingo-score-didnt'] === undefined) {
-                throw new Error('missing keys');
-            }
-            if (isNaN(parseInt(json['admingo-score-knew'])) || isNaN(parseInt(json['admingo-score-didnt']))) {
-                throw new Error('invalid scores');
-            }
+        msgEl.className = 'backup-msg';
+        msgEl.textContent = 'Chargement…';
 
-            // Write to localStorage
-            Object.keys(json).forEach((key) => {
-                if (BACKUP_KEYS.includes(key)) {
-                    localStorage.setItem(key, json[key]);
-                }
+        // Fetch from Bytebin
+        fetch(BYTEBIN_URL + '/' + encodeURIComponent(code))
+            .then((res) => {
+                if (!res.ok) throw new Error('not found');
+                return res.text();
+            })
+            .then((base64) => {
+                restoreFromCode(base64);
+                msgEl.className = 'backup-msg backup-msg--success';
+                msgEl.textContent = 'Importé !';
+            })
+            .catch(() => {
+                msgEl.className = 'backup-msg backup-msg--error';
+                msgEl.textContent = 'Code invalide ou expiré';
             });
-
-            // Update UI
-            loadScore();
-            initDarkMode();
-
-            msgEl.className = 'backup-msg backup-msg--success';
-            msgEl.textContent = 'Importé !';
-        } catch {
-            msgEl.className = 'backup-msg backup-msg--error';
-            msgEl.textContent = 'Code invalide';
-        }
     });
 }
 

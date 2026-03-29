@@ -5,7 +5,7 @@
    Pour forcer une mise à jour, incrémenter CACHE_VERSION.
    ============================================ */
 
-const CACHE_VERSION = 'admingo-v5';
+const CACHE_VERSION = 'admingo-v6';
 
 const PRECACHE_URLS = [
     './',
