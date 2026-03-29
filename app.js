@@ -687,18 +687,46 @@ document.addEventListener('DOMContentLoaded', init);
 // ============================================
 let deferredInstallPrompt = null;
 
+function isIOSSafari() {
+    const ua = navigator.userAgent;
+    return /iPad|iPhone|iPod/.test(ua) && !window.MSStream && !ua.includes('CriOS') && !ua.includes('FxiOS');
+}
+
+function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+
+function showPWABanner() {
+    if (localStorage.getItem('admingo-pwa-dismissed')) return;
+    if (isStandalone()) return;
+
+    const banner = document.getElementById('pwa-banner');
+    if (!banner) return;
+
+    if (isIOSSafari()) {
+        // iOS Safari : instructions manuelles
+        const desc = document.getElementById('pwa-desc');
+        const actions = document.getElementById('pwa-actions');
+        if (desc) {
+            desc.innerHTML = 'Appuyez sur <svg style="display:inline;vertical-align:middle;margin:0 2px;" width="18" height="18" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="14" width="38" height="30" rx="4" stroke="rgb(var(--color-primary))" stroke-width="4" fill="none"/><path d="M25 28V4M25 4L17 12M25 4L33 12" stroke="rgb(var(--color-primary))" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg> <strong>Partager</strong> puis <strong>« Sur l\'écran d\'accueil »</strong> pour installer AdminGo.';
+        }
+        if (actions) {
+            actions.innerHTML = '<button id="pwa-dismiss" class="pwa-banner-btn pwa-banner-btn--install" style="flex:1;">OK, compris</button>';
+            document.getElementById('pwa-dismiss').addEventListener('click', () => {
+                localStorage.setItem('admingo-pwa-dismissed', '1');
+                banner.style.display = 'none';
+            });
+        }
+    }
+
+    banner.style.display = 'block';
+}
+
+// Chrome/Edge : capturer le prompt natif
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
-
-    // Ne pas afficher si l'utilisateur a déjà fait un choix
-    if (localStorage.getItem('admingo-pwa-dismissed')) return;
-
-    // Ne pas afficher si déjà installé (standalone)
-    if (window.matchMedia('(display-mode: standalone)').matches) return;
-
-    const banner = document.getElementById('pwa-banner');
-    if (banner) banner.style.display = 'block';
+    showPWABanner();
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -724,5 +752,10 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('admingo-pwa-dismissed', '1');
             if (banner) banner.style.display = 'none';
         });
+    }
+
+    // iOS Safari : pas de beforeinstallprompt, on affiche après un délai
+    if (isIOSSafari()) {
+        setTimeout(showPWABanner, 2000);
     }
 });
