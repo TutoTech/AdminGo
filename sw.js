@@ -5,43 +5,28 @@
    Pour forcer une mise à jour, incrémenter CACHE_VERSION.
    ============================================ */
 
-const CACHE_VERSION = 'admingo-v1';
+const CACHE_VERSION = 'admingo-v2';
 
 const PRECACHE_URLS = [
-    '/',
-    '/index.html',
-    '/app.js',
-    '/particles.js',
-    '/styles.css',
-    '/database.csv',
-    '/logo.png',
-    '/manifest.json',
-    '/mentions-legales.html',
-];
-
-const PRECACHE_CORS_URLS = [
-    'https://cdn.tailwindcss.com',
-    'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js',
-    'https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap',
+    './',
+    './index.html',
+    './app.js',
+    './particles.js',
+    './styles.css',
+    './database.csv',
+    './logo.png',
+    './manifest.json',
+    './mentions-legales.html',
 ];
 
 // ============================================
-// INSTALL : précache toutes les ressources
+// INSTALL : précache les ressources locales
 // ============================================
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_VERSION).then(async (cache) => {
-            // Ressources locales (same-origin)
-            await cache.addAll(PRECACHE_URLS);
-
-            // Ressources cross-origin (CORS)
-            await Promise.all(
-                PRECACHE_CORS_URLS.map(async (url) => {
-                    const response = await fetch(url, { mode: 'cors' });
-                    await cache.put(url, response);
-                })
-            );
-        }).then(() => self.skipWaiting())
+        caches.open(CACHE_VERSION)
+            .then((cache) => cache.addAll(PRECACHE_URLS))
+            .then(() => self.skipWaiting())
     );
 });
 
@@ -59,20 +44,39 @@ self.addEventListener('activate', (event) => {
 });
 
 // ============================================
-// FETCH : cache-first, fallback réseau
+// FETCH : cache-first, fallback réseau + cache runtime
 // ============================================
 self.addEventListener('fetch', (event) => {
+    const { request } = event;
+
+    // Ignorer les requêtes non-GET
+    if (request.method !== 'GET') return;
+
     event.respondWith(
-        caches.match(event.request).then((cached) => {
+        caches.match(request).then((cached) => {
             if (cached) return cached;
 
-            return fetch(event.request).then((response) => {
-                // Cache les polices Google Fonts (.woff2) au premier chargement
-                if (response.ok && event.request.url.includes('fonts.gstatic.com')) {
+            return fetch(request).then((response) => {
+                // Ne pas cacher les réponses en erreur ou opaques invalides
+                if (!response || response.status !== 200) return response;
+
+                // Cache runtime pour les CDN et polices Google
+                const url = request.url;
+                const shouldCache =
+                    url.includes('cdn.tailwindcss.com') ||
+                    url.includes('cdnjs.cloudflare.com') ||
+                    url.includes('fonts.googleapis.com') ||
+                    url.includes('fonts.gstatic.com');
+
+                if (shouldCache) {
                     const clone = response.clone();
-                    caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, clone));
+                    caches.open(CACHE_VERSION).then((cache) => cache.put(request, clone));
                 }
+
                 return response;
+            }).catch(() => {
+                // Hors-ligne et pas en cache : pas de fallback possible
+                return new Response('Offline', { status: 503, statusText: 'Offline' });
             });
         })
     );
