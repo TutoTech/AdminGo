@@ -192,6 +192,19 @@
             <p><kbd class="px-1.5 py-0.5 rounded font-mono text-[10px]"
                 style="background: rgb(var(--color-border));">Entrée</kbd> Suivante</p>
           </div>
+
+          <!-- Backup -->
+          <div class="mt-4 p-4 rounded-2xl text-xs"
+            style="background: rgb(var(--color-surface)); color: rgb(var(--color-text-secondary)); border: 1px solid rgb(var(--color-border));">
+            <p class="font-bold mb-2" style="color: rgb(var(--color-text));">💾 Sauvegarde</p>
+            <div class="flex gap-2 mb-0" id="backup-buttons">
+              <button id="btn-export" class="backup-btn flex-1">Exporter</button>
+              <button id="btn-import" class="backup-btn flex-1">Importer</button>
+            </div>
+            <div id="backup-panel" class="backup-panel" style="display:none;">
+              <!-- Filled by JS -->
+            </div>
+          </div>
         </aside>
 
         <!-- ================================

@@ -1127,6 +1127,97 @@ html.dark header.glass-header {
 }
 
 /* ============================================
+   BACKUP EXPORT/IMPORT
+   ============================================ */
+.backup-btn {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  border: 2px solid rgb(var(--color-border));
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  background: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 0 rgb(var(--color-border));
+}
+
+.backup-btn:hover {
+  filter: brightness(0.96);
+}
+
+.backup-btn:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.backup-btn.active {
+  border-color: rgb(var(--color-primary));
+  color: rgb(var(--color-primary));
+}
+
+.backup-panel {
+  margin-top: 10px;
+}
+
+.backup-field {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.backup-input {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 2px solid rgb(var(--color-border));
+  background: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  outline: none;
+  min-width: 0;
+}
+
+.backup-input:focus {
+  border-color: rgb(var(--color-primary));
+}
+
+.backup-action-btn {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.7rem;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  background: rgb(var(--color-primary));
+  color: #fff;
+  transition: all 0.15s ease;
+}
+
+.backup-action-btn:hover {
+  filter: brightness(1.08);
+}
+
+.backup-msg {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.backup-msg--success {
+  color: rgb(var(--color-primary));
+}
+
+.backup-msg--error {
+  color: rgb(var(--color-danger));
+}
+
+/* ============================================
    PWA INSTALL BANNER
    ============================================ */
 .pwa-banner {

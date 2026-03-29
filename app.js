@@ -674,9 +674,127 @@ async function init() {
         });
     }
 
+    // Backup export/import
+    document.getElementById('btn-export')?.addEventListener('click', toggleExportPanel);
+    document.getElementById('btn-import')?.addEventListener('click', toggleImportPanel);
+
     // Hide loading, show app
     if (loadingScreen) loadingScreen.classList.add('hidden');
     if (appContainer) appContainer.classList.remove('hidden');
+}
+
+// ============================================
+// BACKUP EXPORT / IMPORT
+// ============================================
+const BACKUP_KEYS = ['admingo-score-knew', 'admingo-score-didnt', 'ais-dark-mode', 'admingo-pwa-dismissed'];
+let activeBackupMode = null; // 'export' | 'import' | null
+
+function getBackupPanel() {
+    return document.getElementById('backup-panel');
+}
+
+function toggleExportPanel() {
+    const panel = getBackupPanel();
+    const btnExport = document.getElementById('btn-export');
+    const btnImport = document.getElementById('btn-import');
+    if (!panel) return;
+
+    if (activeBackupMode === 'export') {
+        panel.style.display = 'none';
+        btnExport.classList.remove('active');
+        activeBackupMode = null;
+        return;
+    }
+
+    // Build export data
+    const data = {};
+    BACKUP_KEYS.forEach((key) => {
+        const val = localStorage.getItem(key);
+        if (val !== null) data[key] = val;
+    });
+    const code = btoa(JSON.stringify(data));
+
+    panel.innerHTML =
+        '<div class="backup-field">' +
+        '<input type="text" class="backup-input" id="backup-code" value="' + code + '" readonly />' +
+        '<button class="backup-action-btn" id="btn-copy-backup">Copier</button>' +
+        '</div>' +
+        '<div id="backup-msg"></div>';
+
+    panel.style.display = 'block';
+    btnExport.classList.add('active');
+    btnImport.classList.remove('active');
+    activeBackupMode = 'export';
+
+    document.getElementById('btn-copy-backup').addEventListener('click', () => {
+        const input = document.getElementById('backup-code');
+        navigator.clipboard.writeText(input.value).then(() => {
+            const btn = document.getElementById('btn-copy-backup');
+            btn.textContent = 'Copié !';
+            setTimeout(() => { btn.textContent = 'Copier'; }, 2000);
+        });
+    });
+}
+
+function toggleImportPanel() {
+    const panel = getBackupPanel();
+    const btnExport = document.getElementById('btn-export');
+    const btnImport = document.getElementById('btn-import');
+    if (!panel) return;
+
+    if (activeBackupMode === 'import') {
+        panel.style.display = 'none';
+        btnImport.classList.remove('active');
+        activeBackupMode = null;
+        return;
+    }
+
+    panel.innerHTML =
+        '<div class="backup-field">' +
+        '<input type="text" class="backup-input" id="backup-import-code" placeholder="Collez votre code ici" />' +
+        '<button class="backup-action-btn" id="btn-validate-import">Valider</button>' +
+        '</div>' +
+        '<div id="backup-msg"></div>';
+
+    panel.style.display = 'block';
+    btnImport.classList.add('active');
+    btnExport.classList.remove('active');
+    activeBackupMode = 'import';
+
+    document.getElementById('btn-validate-import').addEventListener('click', () => {
+        const input = document.getElementById('backup-import-code');
+        const msgEl = document.getElementById('backup-msg');
+        const code = input.value.trim();
+
+        try {
+            const json = JSON.parse(atob(code));
+
+            // Validate required keys
+            if (typeof json['admingo-score-knew'] === undefined || typeof json['admingo-score-didnt'] === undefined) {
+                throw new Error('missing keys');
+            }
+            if (isNaN(parseInt(json['admingo-score-knew'])) || isNaN(parseInt(json['admingo-score-didnt']))) {
+                throw new Error('invalid scores');
+            }
+
+            // Write to localStorage
+            Object.keys(json).forEach((key) => {
+                if (BACKUP_KEYS.includes(key)) {
+                    localStorage.setItem(key, json[key]);
+                }
+            });
+
+            // Update UI
+            loadScore();
+            initDarkMode();
+
+            msgEl.className = 'backup-msg backup-msg--success';
+            msgEl.textContent = 'Importé !';
+        } catch {
+            msgEl.className = 'backup-msg backup-msg--error';
+            msgEl.textContent = 'Code invalide';
+        }
+    });
 }
 
 // Launch on DOM ready
