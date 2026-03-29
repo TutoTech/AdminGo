@@ -1,0 +1,18 @@
+{
+  "name": "AdminGo — Révisions examen AIS",
+  "short_name": "AdminGo",
+  "description": "Flashcards de révision pour l'examen AIS",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#58CC02",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "540x540",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

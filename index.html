@@ -15,6 +15,10 @@
   <meta property="og:type" content="website" />
   <meta name="theme-color" content="#58CC02" />
 
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="logo.png" />
+
   <!-- Favicon (emoji fallback) -->
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
@@ -297,6 +301,13 @@
   <!-- App Script -->
   <script src="particles.js"></script>
   <script src="app.js"></script>
+
+  <!-- Service Worker (PWA offline) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  </script>
 </body>
 
 </html>
