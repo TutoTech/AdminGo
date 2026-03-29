@@ -30,10 +30,13 @@ Une SPA statique, moderne et gamifiée, inspirée du design Duolingo.
 |---|---|
 | 🃏 **510 flashcards** | Générées dynamiquement depuis un fichier CSV (10 questions par sujet × 51 sujets) |
 | 🔄 **Animation 3D Flip** | Retournement de carte fluide avec `perspective` et `rotateY` CSS 3D |
+| 🔍 **Recherche** | Filtrage instantané par mot-clé dans les questions et réponses (insensible aux accents) |
 | 📋 **Filtres par domaine** | Cases à cocher pour réviser par thématique (9 domaines couverts) |
 | 📊 **Barre de progression** | Style Duolingo avec animation élastique |
 | 🔀 **Mélange aléatoire** | Algorithme de Fisher-Yates pour un ordre différent à chaque session |
 | 🌙 **Mode sombre** | Basculement instantané avec persistance via `localStorage` |
+| 📶 **Mode hors-ligne (PWA)** | Installable sur l'écran d'accueil, fonctionne sans connexion internet |
+| 💾 **Export/Import** | Sauvegardez et restaurez votre progression entre appareils via un code court |
 | 🤖 **Easter Egg Cyberpunk** | Code Konami (↑↑↓↓←→←→BA) — thème néon avec scanlines et glitch |
 | ⌨️ **Raccourcis clavier** | `Espace` pour retourner, `Entrée` pour suivant |
 | 📱 **Responsive** | Design adaptatif pour desktop, tablette et mobile |
@@ -76,11 +79,15 @@ Les fichiers sont 100% statiques. Servez simplement le répertoire avec nginx, A
 ## 🏗️ Architecture
 
 ```
-website-revisions-adminsys/
+AdminGo/
 ├── index.html          # Structure HTML5 + CDN Tailwind & PapaParse
 ├── styles.css          # Animations flip 3D, dark mode, thème cyberpunk
-├── app.js              # Logique : parsing CSV, shuffle, filtres, navigation
+├── app.js              # Logique : parsing CSV, shuffle, filtres, recherche, navigation
+├── particles.js        # Réseau de particules interactif (canvas)
 ├── database.csv        # Base de données des 510 questions/réponses
+├── manifest.json       # Manifeste PWA (installation, icône, thème)
+├── sw.js               # Service Worker (cache hors-ligne)
+├── logo.png            # Logo de l'application
 ├── Dockerfile          # Image nginx:alpine pour le déploiement
 ├── docker-compose.yml  # Orchestration Docker sur le port 8080
 └── README.md           # Ce fichier
@@ -94,7 +101,8 @@ website-revisions-adminsys/
 | **Styling** | Tailwind CSS (CDN) + CSS custom | Design utilitaire + animations avancées |
 | **Parsing** | PapaParse (CDN) | Lecture et parsing du fichier CSV |
 | **Logique** | Vanilla JavaScript ES6+ | Zero dépendance, zero framework |
-| **Déploiement** | Docker / nginx:alpine | Image légère (~7 Mo) prête pour la production |
+| **PWA** | Service Worker + Manifest | Installation mobile/desktop + cache hors-ligne |
+| **Déploiement** | GitHub Pages / Docker | Hébergement statique ou image nginx:alpine (~7 Mo) |
 
 ### Flux de données
 
@@ -109,6 +117,9 @@ fetch() ──► PapaParse ──► Tableau de 510 cartes
                               │
                               ▼
                     Filtrage par domaine
+                              │
+                              ▼
+                    Filtrage par recherche
                               │
                               ▼
                       Rendu de la carte
