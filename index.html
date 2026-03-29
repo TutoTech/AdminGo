@@ -298,6 +298,25 @@
 
   </div>
 
+  <!-- PWA Install Banner -->
+  <div id="pwa-banner" class="pwa-banner" role="alert" style="display:none;">
+    <div class="pwa-banner-content">
+      <div class="pwa-banner-icon">
+        <img src="logo.png" alt="" class="w-10 h-10 rounded-lg"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+        <span class="text-3xl" style="display:none;">🎓</span>
+      </div>
+      <div class="pwa-banner-text">
+        <p class="pwa-banner-title">Installer AdminGo</p>
+        <p class="pwa-banner-desc">Accédez à vos flashcards depuis l'écran d'accueil, même sans connexion internet.</p>
+      </div>
+    </div>
+    <div class="pwa-banner-actions">
+      <button id="pwa-install" class="pwa-banner-btn pwa-banner-btn--install">Installer</button>
+      <button id="pwa-dismiss" class="pwa-banner-btn pwa-banner-btn--dismiss">Plus tard</button>
+    </div>
+  </div>
+
   <!-- App Script -->
   <script src="particles.js"></script>
   <script src="app.js"></script>

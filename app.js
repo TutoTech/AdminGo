@@ -681,3 +681,48 @@ async function init() {
 
 // Launch on DOM ready
 document.addEventListener('DOMContentLoaded', init);
+
+// ============================================
+// PWA INSTALL BANNER
+// ============================================
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+
+    // Ne pas afficher si l'utilisateur a déjà fait un choix
+    if (localStorage.getItem('admingo-pwa-dismissed')) return;
+
+    // Ne pas afficher si déjà installé (standalone)
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
+
+    const banner = document.getElementById('pwa-banner');
+    if (banner) banner.style.display = 'block';
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const banner = document.getElementById('pwa-banner');
+    const btnInstall = document.getElementById('pwa-install');
+    const btnDismiss = document.getElementById('pwa-dismiss');
+
+    if (btnInstall) {
+        btnInstall.addEventListener('click', async () => {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            if (outcome === 'accepted') {
+                localStorage.setItem('admingo-pwa-dismissed', '1');
+            }
+            deferredInstallPrompt = null;
+            if (banner) banner.style.display = 'none';
+        });
+    }
+
+    if (btnDismiss) {
+        btnDismiss.addEventListener('click', () => {
+            localStorage.setItem('admingo-pwa-dismissed', '1');
+            if (banner) banner.style.display = 'none';
+        });
+    }
+});

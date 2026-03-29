@@ -1127,6 +1127,113 @@ html.dark header.glass-header {
 }
 
 /* ============================================
+   PWA INSTALL BANNER
+   ============================================ */
+.pwa-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  padding: 16px;
+  background: rgb(var(--color-surface));
+  border-top: 2px solid rgb(var(--color-border));
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+  animation: pwa-slide-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html.dark .pwa-banner {
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes pwa-slide-up {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.pwa-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.pwa-banner-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.pwa-banner-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: rgb(var(--color-text));
+  margin-bottom: 2px;
+}
+
+.pwa-banner-desc {
+  font-size: 0.8rem;
+  color: rgb(var(--color-text-secondary));
+  line-height: 1.4;
+}
+
+.pwa-banner-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.pwa-banner-btn {
+  flex: 1;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pwa-banner-btn--install {
+  background: rgb(var(--color-primary));
+  color: #fff;
+  box-shadow: 0 3px 0 rgb(var(--color-primary-dark));
+}
+
+.pwa-banner-btn--install:hover {
+  filter: brightness(1.08);
+}
+
+.pwa-banner-btn--install:active {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+
+.pwa-banner-btn--dismiss {
+  background: rgb(var(--color-bg));
+  color: rgb(var(--color-text-secondary));
+  border: 2px solid rgb(var(--color-border));
+  box-shadow: 0 3px 0 rgb(var(--color-border));
+}
+
+.pwa-banner-btn--dismiss:hover {
+  filter: brightness(0.96);
+}
+
+.pwa-banner-btn--dismiss:active {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+
+/* ============================================
    REDUCED MOTION (accessibility)
    ============================================ */
 @media (prefers-reduced-motion: reduce) {
