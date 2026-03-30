@@ -687,7 +687,7 @@ async function init() {
 // BACKUP EXPORT / IMPORT
 // ============================================
 const BACKUP_KEYS = ['admingo-score-knew', 'admingo-score-didnt', 'ais-dark-mode', 'admingo-pwa-dismissed'];
-const BYTEBIN_URL = 'https://bytebin.lucko.me';
+const PASTE_URL = 'https://api.pastes.dev';
 let activeBackupMode = null; // 'export' | 'import' | null
 
 function getBackupPanel() {
@@ -711,6 +711,25 @@ function restoreFromCode(code) {
     initDarkMode();
 }
 
+function showCopyableCode(panel, label, code) {
+    panel.innerHTML =
+        '<p class="backup-msg" style="margin-bottom:6px;">' + label + '</p>' +
+        '<div class="backup-field">' +
+        '<input type="text" class="backup-input" id="backup-code" value="' + code + '" readonly />' +
+        '<button class="backup-action-btn" id="btn-copy-backup">Copier</button>' +
+        '</div>' +
+        '<div id="backup-msg"></div>';
+
+    document.getElementById('btn-copy-backup').addEventListener('click', () => {
+        const input = document.getElementById('backup-code');
+        navigator.clipboard.writeText(input.value).then(() => {
+            const btn = document.getElementById('btn-copy-backup');
+            btn.textContent = 'Copié !';
+            setTimeout(() => { btn.textContent = 'Copier'; }, 2000);
+        });
+    });
+}
+
 function toggleExportPanel() {
     const panel = getBackupPanel();
     const btnExport = document.getElementById('btn-export');
@@ -730,7 +749,7 @@ function toggleExportPanel() {
         const val = localStorage.getItem(key);
         if (val !== null) data[key] = val;
     });
-    const code = btoa(JSON.stringify(data));
+    const base64Code = btoa(JSON.stringify(data));
 
     panel.innerHTML =
         '<div id="backup-msg" class="backup-msg">Envoi en cours…</div>';
@@ -739,41 +758,22 @@ function toggleExportPanel() {
     btnImport.classList.remove('active');
     activeBackupMode = 'export';
 
-    // Upload to Bytebin
-    fetch(BYTEBIN_URL + '/post', {
+    // Upload to pastes.dev, fallback to raw base64
+    fetch(PASTE_URL + '/post', {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: code,
+        headers: { 'Content-Type': 'text/plain', 'User-Agent': 'AdminGo' },
+        body: base64Code,
     })
         .then((res) => {
             if (!res.ok) throw new Error('upload failed');
             return res.json();
         })
         .then((json) => {
-            const shortCode = json.key;
-            panel.innerHTML =
-                '<p class="backup-msg" style="margin-bottom:6px;">Entrez ce code sur l\'autre appareil :</p>' +
-                '<div class="backup-field">' +
-                '<input type="text" class="backup-input" id="backup-code" value="' + shortCode + '" readonly />' +
-                '<button class="backup-action-btn" id="btn-copy-backup">Copier</button>' +
-                '</div>' +
-                '<div id="backup-msg"></div>';
-
-            document.getElementById('btn-copy-backup').addEventListener('click', () => {
-                const input = document.getElementById('backup-code');
-                navigator.clipboard.writeText(input.value).then(() => {
-                    const btn = document.getElementById('btn-copy-backup');
-                    btn.textContent = 'Copié !';
-                    setTimeout(() => { btn.textContent = 'Copier'; }, 2000);
-                });
-            });
+            showCopyableCode(panel, 'Entrez ce code sur l\'autre appareil :', json.key);
         })
         .catch(() => {
-            const msgEl = document.getElementById('backup-msg');
-            if (msgEl) {
-                msgEl.className = 'backup-msg backup-msg--error';
-                msgEl.textContent = 'Erreur réseau. Vérifiez votre connexion.';
-            }
+            // Fallback : afficher le code base64 brut
+            showCopyableCode(panel, 'Copiez ce code de sauvegarde :', base64Code);
         });
 }
 
@@ -812,21 +812,40 @@ function toggleImportPanel() {
         msgEl.className = 'backup-msg';
         msgEl.textContent = 'Chargement…';
 
-        // Fetch from Bytebin
-        fetch(BYTEBIN_URL + '/' + encodeURIComponent(code))
-            .then((res) => {
-                if (!res.ok) throw new Error('not found');
-                return res.text();
-            })
-            .then((base64) => {
-                restoreFromCode(base64);
+        // Code court (< 20 car.) → tenter pastes.dev d'abord
+        if (code.length < 20) {
+            fetch(PASTE_URL + '/' + encodeURIComponent(code))
+                .then((res) => {
+                    if (!res.ok) throw new Error('not found');
+                    return res.text();
+                })
+                .then((base64) => {
+                    restoreFromCode(base64);
+                    msgEl.className = 'backup-msg backup-msg--success';
+                    msgEl.textContent = 'Importé !';
+                })
+                .catch(() => {
+                    // Fallback : tenter comme base64 brut
+                    try {
+                        restoreFromCode(code);
+                        msgEl.className = 'backup-msg backup-msg--success';
+                        msgEl.textContent = 'Importé !';
+                    } catch {
+                        msgEl.className = 'backup-msg backup-msg--error';
+                        msgEl.textContent = 'Code invalide ou expiré';
+                    }
+                });
+        } else {
+            // Code long → c'est du base64 brut
+            try {
+                restoreFromCode(code);
                 msgEl.className = 'backup-msg backup-msg--success';
                 msgEl.textContent = 'Importé !';
-            })
-            .catch(() => {
+            } catch {
                 msgEl.className = 'backup-msg backup-msg--error';
-                msgEl.textContent = 'Code invalide ou expiré';
-            });
+                msgEl.textContent = 'Code invalide';
+            }
+        }
     });
 }
 
