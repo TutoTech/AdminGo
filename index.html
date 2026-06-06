@@ -147,6 +147,16 @@
           </button>
 
           <div id="filter-sidebar" class="filter-panel hidden lg:block">
+            <!-- Exam selector (TSSR / AIS / Tous) -->
+            <h2 class="font-black text-sm uppercase tracking-wider mb-2" style="color: rgb(var(--color-text));">
+              🎯 Examen visé
+            </h2>
+            <div id="exam-toggle" class="exam-toggle mb-5" role="group" aria-label="Examen visé">
+              <button id="btn-exam-all" class="exam-btn active" data-exam="all" aria-pressed="true">Tous</button>
+              <button id="btn-exam-ais" class="exam-btn" data-exam="AIS" aria-pressed="false">AIS</button>
+              <button id="btn-exam-tssr" class="exam-btn" data-exam="TSSR" aria-pressed="false">TSSR</button>
+            </div>
+
             <div class="flex items-center justify-between mb-4">
               <h2 class="font-black text-sm uppercase tracking-wider" style="color: rgb(var(--color-text));">
                 📋 Domaines
