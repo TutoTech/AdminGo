@@ -1398,3 +1398,316 @@ html.dark .pwa-banner {
     display: none !important;
   }
 }
+
+/* ============================================
+   REDUCE ANIMATIONS (in-app toggle, mirrors the media query)
+   ============================================ */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+html.reduce-motion .card-flipper {
+  transition: none;
+}
+
+html.reduce-motion .progress-bar {
+  transition: none;
+}
+
+html.reduce-motion .swipe-hint {
+  display: none !important;
+}
+
+/* ============================================
+   SEARCH HIGHLIGHT
+   ============================================ */
+mark {
+  background: rgba(var(--color-accent), 0.35);
+  color: inherit;
+  border-radius: 4px;
+  padding: 0 2px;
+  font-weight: inherit;
+}
+
+html.dark mark {
+  background: rgba(var(--color-accent), 0.45);
+}
+
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
+.toast-container {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgb(var(--color-text));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast--error {
+  background: rgb(var(--color-danger));
+}
+
+.toast--success {
+  background: rgb(var(--color-primary));
+}
+
+.toast--info {
+  background: rgb(var(--color-secondary));
+}
+
+/* ============================================
+   REVIEW-FAILED TOGGLE + SETTINGS CONTROLS
+   ============================================ */
+.review-failed-btn {
+  width: 100%;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 12px;
+  border: 2px solid rgb(var(--color-border));
+  border-radius: 12px;
+  background: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.review-failed-btn:hover:not(:disabled) {
+  border-color: rgb(var(--color-accent));
+  color: rgb(var(--color-accent));
+}
+
+.review-failed-btn.active {
+  background: rgb(var(--color-accent));
+  border-color: rgb(var(--color-accent));
+  color: #fff;
+  box-shadow: 0 2px 0 rgba(var(--color-accent), 0.6);
+}
+
+.review-failed-btn:active:not(:disabled) {
+  transform: translateY(2px);
+}
+
+.review-failed-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.review-failed-btn:focus-visible {
+  outline: 3px solid rgb(var(--color-secondary));
+  outline-offset: 2px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: rgb(var(--color-text));
+  margin-bottom: 8px;
+}
+
+.settings-row input[type="checkbox"] {
+  accent-color: rgb(var(--color-primary));
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.settings-danger-btn {
+  width: 100%;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  border: 2px solid rgba(var(--color-danger), 0.4);
+  border-radius: 10px;
+  padding: 7px 10px;
+  cursor: pointer;
+  background: rgba(var(--color-danger), 0.08);
+  color: rgb(var(--color-danger));
+  transition: all 0.15s ease;
+}
+
+.settings-danger-btn:hover {
+  background: rgba(var(--color-danger), 0.16);
+}
+
+.settings-danger-btn:active {
+  transform: translateY(2px);
+}
+
+.settings-danger-btn:focus-visible {
+  outline: 3px solid rgb(var(--color-danger));
+  outline-offset: 2px;
+}
+
+/* ============================================
+   MODALS (help + confirmations)
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10002;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.modal-overlay.open {
+  display: flex;
+  animation: modal-fade 0.2s ease-out;
+}
+
+@keyframes modal-fade {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.modal-box {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: rgb(var(--color-bg));
+  border: 2px solid rgb(var(--color-border));
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  animation: modal-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modal-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text-secondary));
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(var(--color-danger), 0.1);
+  color: rgb(var(--color-danger));
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: rgb(var(--color-text));
+  margin-bottom: 14px;
+  padding-right: 28px;
+}
+
+.modal-body {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgb(var(--color-text-secondary));
+}
+
+.modal-note {
+  margin-top: 14px;
+  font-size: 0.82rem;
+}
+
+.shortcut-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shortcut-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shortcut-list kbd {
+  flex-shrink: 0;
+  min-width: 64px;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: rgb(var(--color-surface));
+  border: 1px solid rgb(var(--color-border));
+  color: rgb(var(--color-text));
+}
+
+.shortcut-list span {
+  color: rgb(var(--color-text));
+  font-weight: 600;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.modal-actions .btn-duo {
+  padding: 10px 20px;
+  font-size: 0.85rem;
+}

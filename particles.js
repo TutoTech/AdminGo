@@ -46,15 +46,29 @@
     // ---- Detect reduced motion ----
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     prefersReducedMotion = motionQuery.matches;
-    motionQuery.addEventListener('change', (e) => {
-        prefersReducedMotion = e.matches;
-        if (prefersReducedMotion) {
+
+    // Motion is reduced when the OS asks for it OR when the user enabled the
+    // in-app "Réduire les animations" setting (html.reduce-motion).
+    function isMotionReduced() {
+        return prefersReducedMotion || document.documentElement.classList.contains('reduce-motion');
+    }
+
+    function applyMotionPreference() {
+        if (isMotionReduced()) {
             cancelAnimationFrame(animationId);
-            ctx.clearRect(0, 0, width, height);
+            if (width && height) ctx.clearRect(0, 0, width, height);
         } else {
             animate(0);
         }
+    }
+
+    motionQuery.addEventListener('change', (e) => {
+        prefersReducedMotion = e.matches;
+        applyMotionPreference();
     });
+
+    // Fired by app.js when the in-app toggle changes
+    window.addEventListener('admingo:motion-change', applyMotionPreference);
 
     // ---- Get theme color ----
     function getColor() {
@@ -213,7 +227,7 @@
 
     // ---- Animation loop ----
     function animate(timestamp) {
-        if (prefersReducedMotion) return;
+        if (isMotionReduced()) return;
 
         animationId = requestAnimationFrame(animate);
 
@@ -270,7 +284,7 @@
 
     // ---- Init ----
     resize();
-    if (!prefersReducedMotion) {
+    if (!isMotionReduced()) {
         animate(0);
     }
 })();

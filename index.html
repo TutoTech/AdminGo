@@ -108,6 +108,12 @@
           <span class="score-didnt">❌ <span id="score-didnt-count">0</span></span>
         </div>
 
+        <!-- Help / keyboard shortcuts -->
+        <button id="btn-help" class="theme-toggle shrink-0 lg:order-5" aria-label="Aide et raccourcis clavier"
+          aria-haspopup="dialog" title="Aide et raccourcis clavier">
+          ❓
+        </button>
+
         <!-- Theme toggle -->
         <button id="theme-toggle" class="theme-toggle shrink-0 lg:order-5" aria-label="Basculer le thème">
           🌙
@@ -157,6 +163,11 @@
               <button id="btn-exam-tssr" class="exam-btn" data-exam="TSSR" aria-pressed="false">TSSR</button>
             </div>
 
+            <!-- Review only the cards marked "Je ne savais pas" -->
+            <button id="btn-review-failed" class="review-failed-btn mb-5" type="button" aria-pressed="false">
+              🔁 Réviser mes erreurs (<span id="failed-count">0</span>)
+            </button>
+
             <div class="flex items-center justify-between mb-4">
               <h2 class="font-black text-sm uppercase tracking-wider" style="color: rgb(var(--color-text));">
                 📋 Domaines
@@ -201,6 +212,19 @@
                 style="background: rgb(var(--color-border));">Espace</kbd> Retourner</p>
             <p><kbd class="px-1.5 py-0.5 rounded font-mono text-[10px]"
                 style="background: rgb(var(--color-border));">Entrée</kbd> Suivante</p>
+          </div>
+
+          <!-- Settings -->
+          <div class="mt-4 p-4 rounded-2xl text-xs"
+            style="background: rgb(var(--color-surface)); color: rgb(var(--color-text-secondary)); border: 1px solid rgb(var(--color-border));">
+            <p class="font-bold mb-2" style="color: rgb(var(--color-text));">⚙️ Réglages</p>
+            <label class="settings-row" for="reduce-motion-toggle">
+              <input type="checkbox" id="reduce-motion-toggle" />
+              <span>Réduire les animations</span>
+            </label>
+            <button id="btn-reset-progress" class="settings-danger-btn" type="button">
+              🗑️ Réinitialiser ma progression
+            </button>
           </div>
 
           <!-- Backup -->
@@ -319,6 +343,46 @@
       <p class="mt-1 opacity-50">Astuce : essaie le Code Konami (↑↑↓↓←→←→BA) 😉</p>
     </footer>
 
+  </div>
+
+  <!-- Keyboard shortcuts / help modal -->
+  <div id="shortcuts-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title"
+    style="display:none;">
+    <div class="modal-box">
+      <button class="modal-close" data-close aria-label="Fermer">✕</button>
+      <h2 id="shortcuts-title" class="modal-title">⌨️ Raccourcis & aide</h2>
+      <div class="modal-body">
+        <ul class="shortcut-list">
+          <li><kbd>Espace</kbd> <span>Retourner la carte</span></li>
+          <li><kbd>Entrée</kbd> <span>Carte suivante</span></li>
+          <li><kbd>← →</kbd> <span>Naviguer (swipe sur mobile)</span></li>
+          <li><kbd>?</kbd> <span>Ouvrir cette aide</span></li>
+          <li><kbd>Échap</kbd> <span>Fermer une fenêtre</span></li>
+        </ul>
+        <p class="modal-note">Astuce : <strong>Réviser mes erreurs</strong> rejoue uniquement les cartes
+          marquées « Je ne savais pas ». 😉</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-duo btn-primary" data-close>Compris</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset-progress confirmation modal -->
+  <div id="reset-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="reset-title"
+    style="display:none;">
+    <div class="modal-box">
+      <button class="modal-close" data-close aria-label="Fermer">✕</button>
+      <h2 id="reset-title" class="modal-title">🗑️ Réinitialiser ?</h2>
+      <div class="modal-body">
+        <p>Cette action remet ton score à zéro et vide la liste des cartes à réviser.
+          Cette opération est <strong>irréversible</strong>.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-duo btn-ghost" data-close>Annuler</button>
+        <button id="btn-reset-confirm" class="btn-duo btn-primary">Réinitialiser</button>
+      </div>
+    </div>
   </div>
 
   <!-- PWA Install Banner -->
