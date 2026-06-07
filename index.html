@@ -95,7 +95,7 @@
           </div>
           <div>
             <h1 class="text-lg font-black leading-tight gradient-title">AdminGo</h1>
-            <p class="text-xs font-semibold" style="color: rgb(var(--color-text-secondary));">Révisions examen AIS</p>
+            <p class="text-xs font-semibold" style="color: rgb(var(--color-text-secondary));">Révisions examens AIS & TSSR</p>
           </div>
         </div>
 
@@ -108,16 +108,16 @@
           <span class="score-didnt">❌ <span id="score-didnt-count">0</span></span>
         </div>
 
-        <!-- Help / keyboard shortcuts -->
-        <button id="btn-help" class="theme-toggle shrink-0 lg:order-5" aria-label="Aide et raccourcis clavier"
-          aria-haspopup="dialog" title="Aide et raccourcis clavier">
-          ❓
-        </button>
-
-        <!-- Theme toggle -->
-        <button id="theme-toggle" class="theme-toggle shrink-0 lg:order-5" aria-label="Basculer le thème">
-          🌙
-        </button>
+        <!-- Help + Theme toggle (grouped so they stay on the same row on mobile) -->
+        <div class="flex gap-2 shrink-0 lg:order-5">
+          <button id="btn-help" class="theme-toggle" aria-label="Aide et raccourcis clavier"
+            aria-haspopup="dialog" title="Aide et raccourcis clavier">
+            ❓
+          </button>
+          <button id="theme-toggle" class="theme-toggle" aria-label="Basculer le thème">
+            🌙
+          </button>
+        </div>
 
         <!-- Progress bar (mobile: full width second row) -->
         <div class="flex items-center gap-3 w-full lg:w-auto lg:flex-1 lg:order-2">
@@ -307,13 +307,18 @@
               📘 À propos d'AdminGo
             </p>
             <p>
-              <strong>AdminGo</strong> est un projet dédié aux révisions de préparation à l'examen d'<a
+              <strong>AdminGo</strong> est un projet dédié aux révisions de préparation aux examens d'<a
                 href="https://www.francecompetences.fr/recherche/rncp/37680" target="_blank" rel="noopener noreferrer"
                 class="underline font-semibold" style="color: rgb(var(--color-primary));">Administrateur
-                d'Infrastructures Sécurisées (AIS)</a>. Toutes les questions sont en lien avec les "savoirs"
-              listés dans le <a href="https://www.francecompetences.fr/wp-json/api/v1/activity/export/24214/465506"
+                d'Infrastructures Sécurisées (AIS)</a> et de <a
+                href="https://www.francecompetences.fr/recherche/rncp/37682" target="_blank" rel="noopener noreferrer"
+                class="underline font-semibold" style="color: rgb(var(--color-primary));">Technicien Supérieur
+                Systèmes et Réseaux (TSSR)</a>. Les questions sont basées sur les sujets d'examen et les
+              référentiels de formation (<a href="https://www.francecompetences.fr/wp-json/api/v1/activity/export/24214/465506"
                 target="_blank" rel="noopener noreferrer" class="underline font-semibold"
-                style="color: rgb(var(--color-primary));">référentiel</a> du titre professionnel.
+                style="color: rgb(var(--color-primary));">AIS</a> · <a href="https://www.francecompetences.fr/wp-json/api/v1/activity/export/24216/465511"
+                target="_blank" rel="noopener noreferrer" class="underline font-semibold"
+                style="color: rgb(var(--color-primary));">TSSR</a>).
             </p>
             <p class="mt-3">
               Ce site est proposé <strong>gratuitement</strong> par l'association <a href="https://tutotech.org"
