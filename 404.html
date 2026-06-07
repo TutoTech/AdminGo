@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page introuvable — AdminGo</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#58CC02" />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .notfound-wrap {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      gap: 8px;
+    }
+
+    .notfound-code {
+      font-size: 5rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .notfound-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: rgb(var(--color-text));
+    }
+
+    .notfound-text {
+      color: rgb(var(--color-text-secondary));
+      max-width: 360px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="notfound-wrap">
+    <div class="notfound-code gradient-title">404</div>
+    <p class="notfound-title">🎓 Oups, page introuvable</p>
+    <p class="notfound-text">
+      La page que vous cherchez n'existe pas ou a été déplacée.
+    </p>
+    <a href="/" class="btn-duo btn-primary" style="text-decoration:none;display:inline-block;">
+      Retour à AdminGo
+    </a>
+  </div>
+</body>
+
+</html>

@@ -13,6 +13,8 @@ let domainColorMap = {}; // domain name -> color index
 let scoreKnew = 0;
 let scoreDidnt = 0;
 let searchTerm = '';
+let failedCards = new Set(); // keys of cards marked "didn't know"
+let reviewFailedOnly = false; // when true, only show failed cards
 const konamiSequence = [
     'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
     'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
@@ -62,6 +64,19 @@ async function loadCSV() {
             skipEmptyLines: true,
             transformHeader: (h) => h.trim(),
         });
+
+        // Validate that the expected columns are present (helps when the CSV
+        // is edited by hand). Missing columns are surfaced to the user.
+        const REQUIRED_COLUMNS = ['Examen', 'Domaine', 'Sujet', 'Question 1', 'Réponse 1'];
+        const fields = (parsed.meta && parsed.meta.fields) || [];
+        const missing = REQUIRED_COLUMNS.filter((c) => !fields.includes(c));
+        if (missing.length) {
+            console.warn('Colonnes CSV manquantes :', missing);
+            showToast('Format CSV inattendu : colonnes manquantes (' + missing.join(', ') + ')', 'error');
+        }
+        if (parsed.errors && parsed.errors.length) {
+            console.warn('Avertissements lors du parsing CSV :', parsed.errors);
+        }
 
         const cards = [];
 
@@ -248,6 +263,11 @@ function applyFilters() {
         );
     }
 
+    // "Réviser mes erreurs" mode : keep only cards marked as not known
+    if (reviewFailedOnly) {
+        cards = cards.filter((c) => failedCards.has(cardKey(c)));
+    }
+
     filteredCards = shuffleArray(cards);
     currentIndex = 0;
     isFlipped = false;
@@ -277,7 +297,7 @@ function renderCard() {
     // Front
     domainBadge.textContent = card.domaine;
     sujetLabel.textContent = card.sujet;
-    questionText.textContent = card.question;
+    highlightInto(questionText, card.question, searchTerm);
 
     // Apply domain color to badge
     const colorIdx = domainColorMap[card.domaine];
@@ -296,7 +316,7 @@ function renderCard() {
     }
 
     // Back
-    reponseText.textContent = card.reponse;
+    highlightInto(reponseText, card.reponse, searchTerm);
     explicationText.textContent = card.explication;
 
     // Un-flip
@@ -407,6 +427,12 @@ function saveScore() {
 function markKnew() {
     scoreKnew++;
     saveScore();
+    // Card is now known: drop it from the "to review" set
+    const card = filteredCards[currentIndex];
+    if (card && failedCards.delete(cardKey(card))) {
+        saveFailedCards();
+        updateFailedCount();
+    }
     updateScoreDisplay();
     // Auto-advance to next card
     nextCard();
@@ -415,6 +441,13 @@ function markKnew() {
 function markDidnt() {
     scoreDidnt++;
     saveScore();
+    // Remember this card so it can be reviewed later
+    const card = filteredCards[currentIndex];
+    if (card) {
+        failedCards.add(cardKey(card));
+        saveFailedCards();
+        updateFailedCount();
+    }
     updateScoreDisplay();
     // Auto-advance to next card
     nextCard();
@@ -567,6 +600,16 @@ function initKeyboardShortcuts() {
         // Skip if typing in an input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
+        // "?" opens the keyboard shortcuts help (even while a modal is closed)
+        if (e.key === '?') {
+            e.preventDefault();
+            if (!isModalOpen()) openModal('shortcuts-modal');
+            return;
+        }
+
+        // Don't drive the cards while a modal is open (Escape is handled there)
+        if (isModalOpen()) return;
+
         switch (e.code) {
             case 'Space':
                 e.preventDefault();
@@ -671,10 +714,13 @@ function initTouchSwipe() {
 async function init() {
     // Initialize themes
     initDarkMode();
+    initReduceMotion();
     initKonami();
     initKeyboardShortcuts();
     initTouchSwipe();
+    initModals();
     loadScore();
+    loadFailedCards();
     showSwipeHint();
 
     // Load data
@@ -682,6 +728,7 @@ async function init() {
 
     if (allCards.length === 0) {
         questionText.textContent = 'Erreur : impossible de charger les données.';
+        showToast('Impossible de charger les flashcards. Vérifiez votre connexion puis réessayez.', 'error');
         if (loadingScreen) loadingScreen.classList.add('hidden');
         if (appContainer) appContainer.classList.remove('hidden');
         return;
@@ -713,6 +760,10 @@ async function init() {
     document.getElementById('btn-deselect-all')?.addEventListener('click', deselectAllFilters);
     document.getElementById('btn-shuffle')?.addEventListener('click', reshuffleCards);
     document.getElementById('btn-toggle-filters')?.addEventListener('click', toggleMobileFilters);
+
+    // Review-failed mode + its live counter
+    document.getElementById('btn-review-failed')?.addEventListener('click', toggleReviewFailed);
+    updateFailedCount();
 
     // Search
     const searchInput = document.getElementById('search-input');
@@ -758,7 +809,17 @@ function getBackupPanel() {
 }
 
 function restoreFromCode(code) {
-    const json = JSON.parse(atob(code));
+    let json;
+    try {
+        json = JSON.parse(atob(code));
+    } catch {
+        throw new Error('invalid format');
+    }
+
+    // Reject anything that is not a plain object (arrays, null, primitives)
+    if (typeof json !== 'object' || json === null || Array.isArray(json)) {
+        throw new Error('invalid structure');
+    }
 
     if (isNaN(parseInt(json['admingo-score-knew'])) || isNaN(parseInt(json['admingo-score-didnt']))) {
         throw new Error('invalid scores');
@@ -775,13 +836,18 @@ function restoreFromCode(code) {
 }
 
 function showCopyableCode(panel, label, code) {
+    // Build the static markup first, then inject the dynamic `label` and `code`
+    // via safe DOM properties (textContent / value) to avoid HTML injection.
     panel.innerHTML =
-        '<p class="backup-msg" style="margin-bottom:6px;">' + label + '</p>' +
+        '<p class="backup-msg" id="backup-label" style="margin-bottom:6px;"></p>' +
         '<div class="backup-field">' +
-        '<input type="text" class="backup-input" id="backup-code" value="' + code + '" readonly />' +
+        '<input type="text" class="backup-input" id="backup-code" readonly />' +
         '<button class="backup-action-btn" id="btn-copy-backup">Copier</button>' +
         '</div>' +
         '<div id="backup-msg"></div>';
+
+    document.getElementById('backup-label').textContent = label;
+    document.getElementById('backup-code').value = code;
 
     document.getElementById('btn-copy-backup').addEventListener('click', () => {
         const input = document.getElementById('backup-code');
@@ -908,6 +974,261 @@ function toggleImportPanel() {
                 msgEl.className = 'backup-msg backup-msg--error';
                 msgEl.textContent = 'Code invalide';
             }
+        }
+    });
+}
+
+// ============================================
+// TOAST NOTIFICATIONS (visible error/info feedback)
+// ============================================
+function getToastContainer() {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
+/**
+ * Display a transient, non-blocking toast.
+ * @param {string} message
+ * @param {'info'|'success'|'error'} [type]
+ */
+function showToast(message, type = 'info') {
+    const container = getToastContainer();
+    const toast = document.createElement('div');
+    toast.className = 'toast toast--' + type;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    // Trigger enter animation on next frame
+    requestAnimationFrame(() => toast.classList.add('toast--visible'));
+
+    setTimeout(() => {
+        toast.classList.remove('toast--visible');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+// ============================================
+// SEARCH HIGHLIGHTING (accent-insensitive, XSS-safe)
+// ============================================
+
+/**
+ * Build an accent-insensitive normalized version of `text` along with a map
+ * from each normalized-character index back to the original-character index.
+ * Normalization is done per character so accented letters (é → e) keep a
+ * 1:1 mapping and highlight ranges land on the original characters.
+ */
+function buildNormMap(text) {
+    let norm = '';
+    const map = [];
+    for (let i = 0; i < text.length; i++) {
+        const n = text[i].normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        for (let k = 0; k < n.length; k++) {
+            norm += n[k];
+            map.push(i);
+        }
+    }
+    map.push(text.length); // sentinel for end index lookups
+    return { norm, map };
+}
+
+/**
+ * Render `text` into `el`, wrapping occurrences of `term` in <mark>.
+ * Always uses textContent / createElement so the content is never parsed as
+ * HTML (no injection possible).
+ */
+function highlightInto(el, text, term) {
+    el.textContent = '';
+    const normTerm = term ? normalizeText(term) : '';
+    if (!normTerm) {
+        el.textContent = text;
+        return;
+    }
+
+    const { norm, map } = buildNormMap(text);
+    let cursor = 0; // original index already emitted
+    let pos = 0;    // search position in normalized string
+    let idx = norm.indexOf(normTerm, pos);
+
+    if (idx === -1) {
+        el.textContent = text;
+        return;
+    }
+
+    while (idx !== -1) {
+        const origStart = map[idx];
+        const origEnd = map[idx + normTerm.length];
+        if (origStart > cursor) {
+            el.appendChild(document.createTextNode(text.slice(cursor, origStart)));
+        }
+        const mark = document.createElement('mark');
+        mark.textContent = text.slice(origStart, origEnd);
+        el.appendChild(mark);
+        cursor = origEnd;
+        pos = idx + normTerm.length;
+        idx = norm.indexOf(normTerm, pos);
+    }
+    if (cursor < text.length) {
+        el.appendChild(document.createTextNode(text.slice(cursor)));
+    }
+}
+
+// ============================================
+// FAILED-CARDS TRACKING ("réviser mes erreurs")
+// ============================================
+const FAILED_STORAGE_KEY = 'admingo-failed';
+
+function cardKey(c) {
+    return c.domaine + '||' + c.question;
+}
+
+function loadFailedCards() {
+    try {
+        const stored = JSON.parse(localStorage.getItem(FAILED_STORAGE_KEY) || '[]');
+        failedCards = new Set(Array.isArray(stored) ? stored : []);
+    } catch {
+        failedCards = new Set();
+    }
+}
+
+function saveFailedCards() {
+    localStorage.setItem(FAILED_STORAGE_KEY, JSON.stringify([...failedCards]));
+}
+
+function updateFailedCount() {
+    const countEl = document.getElementById('failed-count');
+    if (countEl) countEl.textContent = failedCards.size;
+
+    const btn = document.getElementById('btn-review-failed');
+    if (btn) {
+        const empty = failedCards.size === 0;
+        // Can't review an empty set; leave the toggle off and disabled
+        btn.disabled = empty && !reviewFailedOnly;
+        if (empty && reviewFailedOnly) {
+            reviewFailedOnly = false;
+            btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+        }
+    }
+}
+
+function toggleReviewFailed() {
+    const btn = document.getElementById('btn-review-failed');
+    if (!btn) return;
+    if (!reviewFailedOnly && failedCards.size === 0) {
+        showToast('Aucune erreur à réviser pour le moment 👍', 'info');
+        return;
+    }
+    reviewFailedOnly = !reviewFailedOnly;
+    btn.classList.toggle('active', reviewFailedOnly);
+    btn.setAttribute('aria-pressed', reviewFailedOnly ? 'true' : 'false');
+    applyFilters();
+}
+
+// ============================================
+// RESET PROGRESS
+// ============================================
+function resetProgress() {
+    scoreKnew = 0;
+    scoreDidnt = 0;
+    saveScore();
+
+    failedCards.clear();
+    saveFailedCards();
+    reviewFailedOnly = false;
+
+    const headerEl = document.getElementById('score-header');
+    if (headerEl) headerEl.style.display = 'none';
+
+    updateScoreDisplay();
+    updateFailedCount();
+    applyFilters();
+    showToast('Progression réinitialisée', 'success');
+}
+
+// ============================================
+// REDUCE ANIMATIONS TOGGLE (accessibility)
+// ============================================
+const REDUCE_MOTION_KEY = 'admingo-reduce-motion';
+
+function initReduceMotion() {
+    const saved = localStorage.getItem(REDUCE_MOTION_KEY) === 'true';
+    if (saved) document.documentElement.classList.add('reduce-motion');
+
+    const checkbox = document.getElementById('reduce-motion-toggle');
+    if (!checkbox) return;
+    checkbox.checked = saved;
+    checkbox.addEventListener('change', () => {
+        document.documentElement.classList.toggle('reduce-motion', checkbox.checked);
+        localStorage.setItem(REDUCE_MOTION_KEY, checkbox.checked);
+        // Let particles.js start/stop its animation loop accordingly
+        window.dispatchEvent(new Event('admingo:motion-change'));
+    });
+}
+
+// ============================================
+// MODALS (help + confirmations)
+// ============================================
+let lastFocusedBeforeModal = null;
+
+function isModalOpen() {
+    return !!document.querySelector('.modal-overlay.open');
+}
+
+function openModal(id) {
+    const overlay = document.getElementById(id);
+    if (!overlay) return;
+    lastFocusedBeforeModal = document.activeElement;
+    overlay.classList.add('open');
+    overlay.style.display = 'flex';
+    // Move focus into the dialog for keyboard/screen-reader users
+    const focusable = overlay.querySelector('button, [href], input, [tabindex]');
+    if (focusable) focusable.focus();
+}
+
+function closeModal(id) {
+    const overlay = document.getElementById(id);
+    if (!overlay) return;
+    overlay.classList.remove('open');
+    overlay.style.display = 'none';
+    if (lastFocusedBeforeModal && typeof lastFocusedBeforeModal.focus === 'function') {
+        lastFocusedBeforeModal.focus();
+    }
+}
+
+function initModals() {
+    // Help modal
+    document.getElementById('btn-help')?.addEventListener('click', () => openModal('shortcuts-modal'));
+
+    // Reset-progress confirmation
+    document.getElementById('btn-reset-progress')?.addEventListener('click', () => openModal('reset-modal'));
+    document.getElementById('btn-reset-confirm')?.addEventListener('click', () => {
+        closeModal('reset-modal');
+        resetProgress();
+    });
+
+    // Generic close behaviours: [data-close] buttons, overlay click, Escape
+    document.querySelectorAll('.modal-overlay').forEach((overlay) => {
+        overlay.querySelectorAll('[data-close]').forEach((btn) => {
+            btn.addEventListener('click', () => closeModal(overlay.id));
+        });
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal(overlay.id);
+        });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isModalOpen()) {
+            const open = document.querySelector('.modal-overlay.open');
+            if (open) closeModal(open.id);
         }
     });
 }
