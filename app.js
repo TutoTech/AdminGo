@@ -15,6 +15,7 @@ let scoreDidnt = 0;
 let searchTerm = '';
 let failedCards = new Set(); // keys of cards marked "didn't know"
 let reviewFailedOnly = false; // when true, only show failed cards
+const POSITION_KEY = 'admingo-position'; // last viewed card index (resume on reload)
 const konamiSequence = [
     'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
     'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
@@ -81,9 +82,14 @@ async function loadCSV() {
         const cards = [];
 
         parsed.data.forEach((row) => {
-            const examen = (row['Examen'] || '').trim();
+            // Missing/blank "Examen" falls back to 'all' so a mislabeled row is
+            // never silently dropped: such cards stay visible under every exam filter.
+            const examen = (row['Examen'] || '').trim() || 'all';
             const domaine = (row['Domaine'] || '').trim();
             const sujet = (row['Sujet'] || '').trim();
+            // Optional "Difficulté" column (facile / moyen / difficile). Absent in
+            // the current CSV — left empty, no badge is shown.
+            const difficulte = (row['Difficulté'] || '').trim().toLowerCase();
 
             // Generate up to 10 cards per row
             for (let i = 1; i <= 10; i++) {
@@ -93,7 +99,7 @@ async function loadCSV() {
 
                 // Skip empty blocks
                 if (question && reponse) {
-                    cards.push({ examen, domaine, sujet, question, reponse, explication });
+                    cards.push({ examen, domaine, sujet, question, reponse, explication, difficulte });
                 }
             }
         });
@@ -108,6 +114,12 @@ async function loadCSV() {
 // ============================================
 // FISHER-YATES SHUFFLE
 // ============================================
+/**
+ * Return a new array with the elements of `array` randomly shuffled.
+ * Uses the Fisher-Yates algorithm; the input array is not mutated.
+ * @param {Array} array - source array
+ * @returns {Array} a shuffled copy
+ */
 function shuffleArray(array) {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -120,6 +132,12 @@ function shuffleArray(array) {
 // ============================================
 // TEXT NORMALIZATION (accent-insensitive search)
 // ============================================
+/**
+ * Lower-case `str` and strip diacritics (é → e) so searches are
+ * accent-insensitive.
+ * @param {string} str
+ * @returns {string} normalized string
+ */
 function normalizeText(str) {
     return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
@@ -206,7 +224,7 @@ const EXAM_STORAGE_KEY = 'admingo-exam';
 function getExamCards() {
     return activeExam === 'all'
         ? allCards
-        : allCards.filter((c) => c.examen === activeExam);
+        : allCards.filter((c) => c.examen === activeExam || c.examen === 'all');
 }
 
 /**
@@ -252,7 +270,7 @@ function initExamFilter() {
  */
 function applyFilters() {
     let cards = allCards.filter(
-        (c) => (activeExam === 'all' || c.examen === activeExam) && activeDomains.has(c.domaine)
+        (c) => (activeExam === 'all' || c.examen === activeExam || c.examen === 'all') && activeDomains.has(c.domaine)
     );
 
     if (searchTerm) {
@@ -277,6 +295,12 @@ function applyFilters() {
 // ============================================
 // CARD RENDERING
 // ============================================
+/**
+ * Render the card at `currentIndex` into the DOM: front (domain, subject,
+ * question), back (answer, explanation), progress bar and counter. Persists
+ * the current position and fires confetti at 100%. Shows an empty state when
+ * no card matches the active filters.
+ */
 function renderCard() {
     if (filteredCards.length === 0) {
         domainBadge.textContent = '—';
@@ -315,6 +339,20 @@ function renderCard() {
         }
     }
 
+    // Optional difficulty badge (shown only when the CSV provides the column)
+    const diffBadge = document.getElementById('difficulty-badge');
+    if (diffBadge) {
+        const labels = { facile: 'Facile', moyen: 'Moyen', difficile: 'Difficile' };
+        const label = labels[card.difficulte];
+        if (label) {
+            diffBadge.textContent = label;
+            diffBadge.setAttribute('data-level', card.difficulte);
+            diffBadge.style.display = 'inline-block';
+        } else {
+            diffBadge.style.display = 'none';
+        }
+    }
+
     // Back
     highlightInto(reponseText, card.reponse, searchTerm);
     explicationText.textContent = card.explication;
@@ -337,6 +375,9 @@ function renderCard() {
         cardCounter.textContent = counterText;
     }
 
+    // Remember the current position so a page reload resumes the same spot
+    localStorage.setItem(POSITION_KEY, currentIndex);
+
     // Progress
     const pct = Math.round(((currentIndex + 1) / filteredCards.length) * 100);
     progressBar.style.width = `${pct}%`;
@@ -355,6 +396,10 @@ function renderCard() {
 // ============================================
 // NAVIGATION
 // ============================================
+/**
+ * Toggle the card between its question (front) and answer (back) faces,
+ * showing the scoring panel on the back and syncing ARIA visibility.
+ */
 function flipCard() {
     if (filteredCards.length === 0) return;
     isFlipped = !isFlipped;
@@ -374,6 +419,7 @@ function flipCard() {
     if (back) back.setAttribute('aria-hidden', isFlipped ? 'false' : 'true');
 }
 
+/** Advance to the next card, wrapping around to the first. */
 function nextCard() {
     if (filteredCards.length === 0) return;
     currentIndex = (currentIndex + 1) % filteredCards.length;
@@ -382,6 +428,7 @@ function nextCard() {
     slideCard('next');
 }
 
+/** Go back to the previous card, wrapping around to the last. */
 function prevCard() {
     if (filteredCards.length === 0) return;
     currentIndex = (currentIndex - 1 + filteredCards.length) % filteredCards.length;
@@ -424,6 +471,8 @@ function saveScore() {
     localStorage.setItem('admingo-score-didnt', scoreDidnt);
 }
 
+/** Mark the current card as known: bump the score, drop it from the
+ *  review-failed set, then auto-advance. */
 function markKnew() {
     scoreKnew++;
     saveScore();
@@ -438,6 +487,8 @@ function markKnew() {
     nextCard();
 }
 
+/** Mark the current card as not known: bump the score, add it to the
+ *  review-failed set, then auto-advance. */
 function markDidnt() {
     scoreDidnt++;
     saveScore();
@@ -465,6 +516,13 @@ function updateScoreDisplay() {
     if (headerEl && (scoreKnew > 0 || scoreDidnt > 0)) {
         headerEl.style.display = 'flex';
     }
+
+    // Session stats panel (reuses the persisted scores, read-only)
+    const total = scoreKnew + scoreDidnt;
+    const seenEl = document.getElementById('stats-seen');
+    const rateEl = document.getElementById('stats-rate');
+    if (seenEl) seenEl.textContent = total;
+    if (rateEl) rateEl.textContent = total > 0 ? Math.round((scoreKnew / total) * 100) + ' %' : '—';
 }
 
 function showScorePanel() {
@@ -742,6 +800,13 @@ async function init() {
 
     // Initial shuffle & render (respect saved exam)
     filteredCards = shuffleArray(getExamCards());
+
+    // Resume at the last viewed position (clamped to the current deck size)
+    const savedPos = parseInt(localStorage.getItem(POSITION_KEY) || '0', 10);
+    if (!isNaN(savedPos) && savedPos > 0 && savedPos < filteredCards.length) {
+        currentIndex = savedPos;
+    }
+
     renderCard();
 
     // Bind events

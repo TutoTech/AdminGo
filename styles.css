@@ -1711,3 +1711,98 @@ html.dark mark {
   padding: 10px 20px;
   font-size: 0.85rem;
 }
+
+/* ============================================
+   DIFFICULTY BADGE (optional "Difficulté" CSV column)
+   ============================================ */
+.difficulty-badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.difficulty-badge[data-level="facile"] {
+  background: rgba(88, 204, 2, 0.15);
+  color: #3a8c00;
+}
+
+.difficulty-badge[data-level="moyen"] {
+  background: rgba(255, 150, 0, 0.15);
+  color: #c47300;
+}
+
+.difficulty-badge[data-level="difficile"] {
+  background: rgba(255, 75, 75, 0.15);
+  color: #cc3030;
+}
+
+html.dark .difficulty-badge[data-level="facile"] {
+  background: rgba(88, 204, 2, 0.2);
+  color: #6de030;
+}
+
+html.dark .difficulty-badge[data-level="moyen"] {
+  background: rgba(255, 150, 0, 0.2);
+  color: #ffb040;
+}
+
+html.dark .difficulty-badge[data-level="difficile"] {
+  background: rgba(255, 75, 75, 0.2);
+  color: #ff7070;
+}
+
+/* ============================================
+   PRINT — fiches de révision imprimables
+   ============================================ */
+@media print {
+
+  /* Masquer tout le chrome de l'interface */
+  #particle-canvas,
+  .glass-header,
+  aside,
+  nav[aria-label="Navigation des cartes"],
+  #score-panel,
+  #swipe-hint,
+  .pwa-banner,
+  #toast-container,
+  .modal-overlay,
+  footer,
+  .flip-hint {
+    display: none !important;
+  }
+
+  body,
+  #app-container,
+  main {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .card-scene {
+    max-width: 100% !important;
+    perspective: none !important;
+  }
+
+  /* Désactiver le flip 3D : afficher les deux faces empilées */
+  .card-flipper {
+    transform: none !important;
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  .card-face {
+    position: static !important;
+    transform: none !important;
+    backface-visibility: visible !important;
+    -webkit-backface-visibility: visible !important;
+    min-height: 0 !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+}
