@@ -8,6 +8,7 @@ let filteredCards = [];
 let currentIndex = 0;
 let isFlipped = false;
 let activeDomains = new Set();
+let activeExam = 'all'; // 'all' | 'AIS' | 'TSSR'
 let domainColorMap = {}; // domain name -> color index
 let scoreKnew = 0;
 let scoreDidnt = 0;
@@ -65,6 +66,7 @@ async function loadCSV() {
         const cards = [];
 
         parsed.data.forEach((row) => {
+            const examen = (row['Examen'] || '').trim();
             const domaine = (row['Domaine'] || '').trim();
             const sujet = (row['Sujet'] || '').trim();
 
@@ -76,7 +78,7 @@ async function loadCSV() {
 
                 // Skip empty blocks
                 if (question && reponse) {
-                    cards.push({ domaine, sujet, question, reponse, explication });
+                    cards.push({ examen, domaine, sujet, question, reponse, explication });
                 }
             }
         });
@@ -128,6 +130,9 @@ function debounce(fn, delay) {
 function buildFilters(cards) {
     const domains = [...new Set(cards.map((c) => c.domaine))].sort();
 
+    // Reset selection: all domains of the current set start checked
+    activeDomains.clear();
+
     // Build domain-to-color mapping (stable across sessions)
     domainColorMap = {};
     domains.forEach((domain, index) => {
@@ -174,11 +179,66 @@ function buildFilters(cards) {
     });
 }
 
+// ============================================
+// EXAM FILTER (TSSR / AIS / Tous)
+// ============================================
+
+const EXAM_STORAGE_KEY = 'admingo-exam';
+
+/**
+ * Cards belonging to the currently selected exam (all cards if 'all')
+ */
+function getExamCards() {
+    return activeExam === 'all'
+        ? allCards
+        : allCards.filter((c) => c.examen === activeExam);
+}
+
+/**
+ * Reflect the active exam on the segmented control buttons
+ */
+function updateExamButtons() {
+    document.querySelectorAll('#exam-toggle .exam-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.exam === activeExam);
+        btn.setAttribute('aria-pressed', btn.dataset.exam === activeExam ? 'true' : 'false');
+    });
+}
+
+/**
+ * Change the selected exam: persist, rebuild domain filters for that exam,
+ * then re-apply filters. Domain checkboxes are rebuilt so only the domains
+ * relevant to the selected exam are shown (all checked by default).
+ */
+function setActiveExam(value) {
+    activeExam = value;
+    localStorage.setItem(EXAM_STORAGE_KEY, value);
+    updateExamButtons();
+    buildFilters(getExamCards());
+    applyFilters();
+}
+
+/**
+ * Read saved exam from localStorage, sync UI, and bind click handlers
+ */
+function initExamFilter() {
+    const saved = localStorage.getItem(EXAM_STORAGE_KEY);
+    if (saved === 'AIS' || saved === 'TSSR' || saved === 'all') {
+        activeExam = saved;
+    }
+    updateExamButtons();
+
+    document.querySelectorAll('#exam-toggle .exam-btn').forEach((btn) => {
+        btn.addEventListener('click', () => setActiveExam(btn.dataset.exam));
+    });
+}
+
 /**
  * Filter cards by active domains, shuffle, and reset
  */
 function applyFilters() {
-    let cards = allCards.filter((c) => activeDomains.has(c.domaine));
+    let cards = allCards.filter(
+        (c) => (activeExam === 'all' || c.examen === activeExam) && activeDomains.has(c.domaine)
+    );
 
     if (searchTerm) {
         const normalizedSearch = normalizeText(searchTerm);
@@ -627,11 +687,14 @@ async function init() {
         return;
     }
 
-    // Build filters
-    buildFilters(allCards);
+    // Restore saved exam selection (TSSR / AIS / Tous) and bind its control
+    initExamFilter();
 
-    // Initial shuffle & render
-    filteredCards = shuffleArray(allCards);
+    // Build filters from the cards of the selected exam
+    buildFilters(getExamCards());
+
+    // Initial shuffle & render (respect saved exam)
+    filteredCards = shuffleArray(getExamCards());
     renderCard();
 
     // Bind events

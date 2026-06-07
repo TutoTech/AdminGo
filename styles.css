@@ -606,6 +606,54 @@ html.dark .score-display .score-knew {
   border: 2px solid rgb(var(--color-border));
 }
 
+/* ============================================
+   EXAM SELECTOR (segmented control)
+   ============================================ */
+.exam-toggle {
+  display: flex;
+  gap: 6px;
+  background: rgb(var(--color-bg));
+  border: 2px solid rgb(var(--color-border));
+  border-radius: 14px;
+  padding: 4px;
+}
+
+.exam-btn {
+  flex: 1;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 4px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: rgb(var(--color-text-secondary));
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.exam-btn:hover {
+  background: rgba(var(--color-primary), 0.08);
+  color: rgb(var(--color-text));
+}
+
+.exam-btn.active {
+  background: rgb(var(--color-primary));
+  color: #fff;
+  box-shadow: 0 2px 0 rgb(var(--color-primary-dark));
+}
+
+.exam-btn:active {
+  transform: translateY(2px);
+}
+
+.exam-btn:focus-visible {
+  outline: 3px solid rgb(var(--color-secondary));
+  outline-offset: 2px;
+}
+
 .filter-item {
   display: flex;
   align-items: center;
