@@ -7,13 +7,32 @@
   <title>AdminGo — Révisions examen AIS</title>
   <meta name="description"
     content="AdminGo : application gratuite de révision par flashcards pour l'examen AIS - Administrateur d'Infrastructures Sécurisées. 500+ questions couvrant tous les domaines de la formation AIS." />
+  <link rel="canonical" href="https://admingo.tutotech.org/" />
 
   <!-- Open Graph / Social sharing -->
   <meta property="og:title" content="AdminGo — Révisions examen AIS" />
   <meta property="og:description"
     content="500+ flashcards interactives pour réviser l'examen AIS. Proposé gratuitement par l'association TutoTech." />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://admingo.tutotech.org/" />
+  <meta property="og:image" content="https://admingo.tutotech.org/logo.png" />
+  <meta property="og:site_name" content="AdminGo" />
+  <meta property="og:locale" content="fr_FR" />
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="AdminGo — Révisions examen AIS" />
+  <meta name="twitter:description"
+    content="500+ flashcards interactives pour réviser l'examen AIS. Proposé gratuitement par l'association TutoTech." />
+  <meta name="twitter:image" content="https://admingo.tutotech.org/logo.png" />
+
   <meta name="theme-color" content="#58CC02" />
+
+  <!-- Accélère la résolution/connexion des CDN au premier chargement -->
+  <link rel="preconnect" href="https://cdn.tailwindcss.com" />
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+  <link rel="dns-prefetch" href="https://cdn.tailwindcss.com" />
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json" />
@@ -65,7 +84,7 @@
     aria-label="Chargement en cours" style="background: rgb(var(--color-bg));">
     <div class="text-center">
       <div class="mb-6 animate-bounce" aria-hidden="true">
-        <img src="logo.png" alt="" class="w-16 h-16 mx-auto"
+        <img src="logo.png" alt="" width="64" height="64" decoding="async" class="w-16 h-16 mx-auto"
           onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
         <span class="text-6xl" style="display:none;">🎓</span>
       </div>
@@ -89,7 +108,7 @@
         <!-- Logo -->
         <div class="flex items-center gap-2 shrink-0">
           <div class="w-10 h-10 flex items-center justify-center shrink-0">
-            <img src="logo.png" alt="AdminGo" class="w-10 h-10 rounded-lg object-contain"
+            <img src="logo.png" alt="AdminGo" width="40" height="40" decoding="async" class="w-10 h-10 rounded-lg object-contain"
               onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
             <span class="text-3xl" style="display:none;">🎓</span>
           </div>
@@ -227,6 +246,16 @@
             </button>
           </div>
 
+          <!-- Session stats -->
+          <div class="mt-4 p-4 rounded-2xl text-xs"
+            style="background: rgb(var(--color-surface)); color: rgb(var(--color-text-secondary)); border: 1px solid rgb(var(--color-border));">
+            <p class="font-bold mb-2" style="color: rgb(var(--color-text));">📊 Statistiques</p>
+            <p class="flex justify-between"><span>Cartes évaluées</span> <strong id="stats-seen"
+                style="color: rgb(var(--color-text));">0</strong></p>
+            <p class="flex justify-between mt-1"><span>Taux de réussite</span> <strong id="stats-rate"
+                style="color: rgb(var(--color-primary));">—</strong></p>
+          </div>
+
           <!-- Backup -->
           <div class="mt-4 p-4 rounded-2xl text-xs"
             style="background: rgb(var(--color-surface)); color: rgb(var(--color-text-secondary)); border: 1px solid rgb(var(--color-border));">
@@ -254,6 +283,7 @@
               <!-- FRONT -->
               <div class="card-face card-front" aria-hidden="false" id="card-front-face">
                 <span id="domain-badge" class="badge">Domaine</span>
+                <span id="difficulty-badge" class="difficulty-badge" style="display:none;"></span>
                 <p id="sujet-label" class="sujet-label">Sujet</p>
                 <p id="question-text" class="question-text" aria-live="polite">Question</p>
                 <p class="flip-hint" aria-hidden="true">👆 Clique pour retourner la carte</p>
@@ -394,7 +424,7 @@
   <div id="pwa-banner" class="pwa-banner" role="alert" style="display:none;">
     <div class="pwa-banner-content">
       <div class="pwa-banner-icon">
-        <img src="logo.png" alt="" class="w-10 h-10 rounded-lg"
+        <img src="logo.png" alt="" width="40" height="40" decoding="async" loading="lazy" class="w-10 h-10 rounded-lg"
           onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
         <span class="text-3xl" style="display:none;">🎓</span>
       </div>

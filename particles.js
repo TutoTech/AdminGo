@@ -47,12 +47,20 @@
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     prefersReducedMotion = motionQuery.matches;
 
-    // Motion is reduced when the OS asks for it OR when the user enabled the
-    // in-app "Réduire les animations" setting (html.reduce-motion).
+    /**
+     * Whether motion should be reduced: true when the OS requests it
+     * (prefers-reduced-motion) OR the in-app "Réduire les animations" setting
+     * is on (html.reduce-motion).
+     * @returns {boolean}
+     */
     function isMotionReduced() {
         return prefersReducedMotion || document.documentElement.classList.contains('reduce-motion');
     }
 
+    /**
+     * Start or stop the animation loop based on the current motion preference,
+     * clearing the canvas when motion is disabled.
+     */
     function applyMotionPreference() {
         if (isMotionReduced()) {
             cancelAnimationFrame(animationId);
