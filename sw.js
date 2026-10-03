@@ -60,13 +60,22 @@ self.addEventListener('fetch', (event) => {
                 // Ne pas cacher les réponses en erreur ou opaques invalides
                 if (!response || response.status !== 200) return response;
 
-                // Cache runtime pour les CDN et polices Google
-                const url = request.url;
-                const shouldCache =
-                    url.includes('cdn.tailwindcss.com') ||
-                    url.includes('cdnjs.cloudflare.com') ||
-                    url.includes('fonts.googleapis.com') ||
-                    url.includes('fonts.gstatic.com');
+                // Cache runtime pour les CDN et polices Google (vérification stricte de l'hôte)
+                let hostname = '';
+                try {
+                    hostname = new URL(request.url).hostname;
+                } catch {
+                    return response;
+                }
+
+                const allowedHosts = [
+                    'cdn.tailwindcss.com',
+                    'cdnjs.cloudflare.com',
+                    'fonts.googleapis.com',
+                    'fonts.gstatic.com',
+                ];
+
+                const shouldCache = allowedHosts.includes(hostname);
 
                 if (shouldCache) {
                     const clone = response.clone();
